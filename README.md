@@ -75,6 +75,11 @@ spec:
   containers:
   - name: nginx-container
     image: nginx
+    ports:
+       - containerPort: 80
+```
+```
+kubectl port-forward pod/meupod 8080:80
 ```
 
 ### Exportando manifesto de um Pod
@@ -88,6 +93,8 @@ kubectl get pod my-pod -o yaml > my-pod.yaml
 ```
 kubectl get pod my-pod -o yaml --export  > my-pod.yaml
 ```
+
+[Saiba mais sobre manifesto](https://medium.com/@sujithar37/understanding-the-kubernetes-manifest-97f44acc2cb9)
 
 ### Criando Namespaces
 
@@ -159,7 +166,7 @@ kubectl label deployment nginx-deployment tier=dev
 
 A finalidade de um ReplicaSet é manter um conjunto estável de réplica de pods em execução a todo momento. 
 Na teoria: É frequentemente usado para garantir a disponibilidade de um número especificado de Pods idênticos.
-* Na prática: É raramente utilizado diretamente.
+* Na prática: É raramente utilizado diretamente. Motivo: versionamento.
 
 * Exemplo:
 ```
@@ -218,6 +225,11 @@ kubectl delete rs frontend
 kubectl delete pod,rs --all
 ```
 
+1. Exercicio Versionamento:
+	Altera a versão da image no seu manifesto e após isso verifique se os pods foram atualizados após você aplicar essa alteração.
+ 
+	
+	
 ### Deployment
 
 Um Deployment fornece atualizações declarativas para Pods e ReplicaSet.
@@ -258,65 +270,101 @@ spec:
 ```
 	
 
-* Criar Deployment
+* Criar Deployment, abordagem imperativa
+```
 kubectl create deployment http-deployment --image=nginx
-
-* Listar Pods e Deployments
+```
+	
+* Listar Pods, ReplicaSet e Deployments
+```
 kubectl get pods
+kubectl get rs
 kubectl get deployments
-
+```
 * Aumentar a quantidade de réplicas 
+```
 kubectl scale --replicas 3 deployment http-deployment
-
+```
+	
 * Diminuir a quantidade de réplicas 
+```
 kubectl scale --replicas 2 deployment http-deployment
-
+```
+	
 * Listar os deployments
+```
 kubectl get deployments
-
+```
+	
 * Mostrar detalhes de um deployment
+```
 kubectl describe deployment http-deployment
-
+```
 * Nova versão da aplicação
 	
-
+#### Exemplo Prático
 Criar Deployment
+```
 kubectl create deployment nginx-deployment --image=nginx:1.7.9
-
-Listar Pods, Deployments e ReplicaSets
+```
+	
+* Listar Pods, ReplicaSet e Deployments
+```
 kubectl get pods
-kubectl get deployments
 kubectl get rs
+kubectl get deployments
+```
 
 * Escalar o Deployment
+```
 kubectl scale --replicas 3 deployment nginx-deployment
-
+```
 * Atualizar o Deployment com uma nova versão da aplicação
+```
 kubectl set image deployment/nginx-deployment nginx=nginx:1.91 --record
-
+```
+	
 * Mostrar detalhes do Deployment
+```
 kubectl describe deployment nginx-deployment
-
+```
+	
 * Verificar status da atualização
-kubectl rollout status deployment.v1.apps/nginx-deployment
-
+```
+kubectl rollout status deployment nginx-deployment
+```
+	
 * Listar Deployments
+```
 kubectl get deployments
-
+```
+	
 * Em caso de erro, desfazer a atualização
+```
 kubectl rollout undo deployment.v1.apps/nginx-deployment
-
+```
 * Mostrar detalhes do Deployment
+```
 kubectl describe deployment nginx-deployment
-
+```
 * Atualizar o Deployment com a versão correta da aplicação
+```
 kubectl set image deployment/nginx-deployment nginx=nginx:1.9.1 --record
-
+```
+	
 * Verificar status da atualização
+```
 kubectl rollout status deployment.v1.apps/nginx-deployment
-
+```
+	
+* Exibir historico de deployments
+```
+kubectl rollout hystori deployment <name>
+```	
 	
 ### Service
+	
+[Referências](https://kubernetes.io/pt-br/docs/tutorials/kubernetes-basics/expose/expose-intro/)
 	
 
 
