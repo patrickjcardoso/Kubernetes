@@ -354,17 +354,49 @@ kubectl set image deployment/nginx-deployment nginx=nginx:1.9.1 --record
 	
 * Verificar status da atualização
 ```
-kubectl rollout status deployment.v1.apps/nginx-deployment
+kubectl rollout status deployment/<nome_do_deployment>
 ```
 	
 * Exibir historico de deployments
 ```
-kubectl rollout hystori deployment <name>
+kubectl rollout history deployment/<nome_do_deployment>
 ```	
 	
 ### Service
 	
 [Referências](https://kubernetes.io/pt-br/docs/tutorials/kubernetes-basics/expose/expose-intro/)
 	
+Um serviço no Kubernetes é uma abstração que define um conjunto lógico de Pods e uma política pela qual acessá-los.
+O conjunto de Pods selecionados por um Serviço é geralmente determinado por um seletor de rótulos LabelSelector.
+	
+Embora cada Pod tenha um endereço IP único, estes IPs não são expostos externamente ao cluster sem um Serviço. Serviços permitem que suas aplicações recebam tráfego. Serviços podem ser expostos de formas diferentes especificando um tipo type na especificação do serviço ServiceSpec:
+
+* ClusterIP (padrão) - Expõe o serviço sob um endereço IP interno no cluster. Este tipo faz do serviço somente alcançável de dentro do cluster.
+* NodePort - Expõe o serviço sob a mesma porta em cada nó selecionado no cluster usando NAT. Faz o serviço acessível externamente ao cluster usando <NodeIP>:<NodePort>. Superconjunto de ClusterIP.
+* LoadBalancer - Cria um balanceador de carga externo no provedor de nuvem atual (se suportado) e assinala um endereço IP fixo e externo para o serviço. Superconjunto de NodePort.
+* ExternalName - Expõe o serviço usando um nome arbitrário (especificado através de externalName na especificação spec) retornando um registro de CNAME com o nome. Nenhum proxy é utilizado. Este tipo requer v1.7 ou mais recente de kube-dns.
+
+	
+![image](https://user-images.githubusercontent.com/66180145/151550260-9f6b2264-6701-4b05-a4bd-12a8f6a15d1b.png)
+
+	
+* Exemplo de Service:
+```
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: mariadb-wp
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306	
+```
+
+
+
 
 
