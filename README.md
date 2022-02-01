@@ -1,6 +1,6 @@
 # Kubernetes
 
-# KUBERNETES 
+# KUBERNETES COM MINIKUBE (Single Node)
 
 1º Instalar o docker
 ```
@@ -100,12 +100,15 @@ kubectl get pod my-pod -o yaml --export  > my-pod.yaml
 
 K8s usa namespaces para organizar objetos no cluster através de uma divisão lógica (como se fosse uma pasta).
 
-Por padrão, kubectl interage com o namespace padrão (default).
-Para usar um namespace específico (diferente do padrão), pode-se usar a flag --namespace=<nome>, ou ainda -n <nome>. 
+
+Por padrão, kubectl interage com o namespace padrão (default). 
+Para usar um namespace específico, diferente do padrão, pode-se usar a flag --namespace=nome, ou ainda -n nome. 
+
 Para interagir com todos os namespaces, pode-se passar a flag --all-namespaces ou -A para o comando.
 
 
 * Criar um novo namespaces
+
 ```
 kubectl create namespace dev
 
@@ -113,22 +116,28 @@ kubectl create namespace teste
 ```
 
 1. Listar os namespaces?
+
 ```
+?
 
 ```
 2. Remover os namespaces?
-```
 
 ```
+?
+```
+
 * Filtrar Pods por namespace 
+
 ```
 kubectl get pods --namespace=teste
 kubectl get pods -n teste
 ```
 
 3. Listar pods de todos os namespaces?
-```
 
+```
+?
 ```
 
 
@@ -147,15 +156,20 @@ Todos os recursos/objetos K8s podem ser rotulados.
 	tier notin (frontend, backend)
 
 * Mostrar labels dos recursos:
+
 ```
 kubectl get pods --show-labels
 ```
+
 * Deletar Pods que têm label run=myapp
+
 ```
 kubectl delete pods -l environment=production,tier=frontend
 kubectl get pods -l 'environment in (production),tier in (frontend)'
 ```
+
 *Atribuir label
+
 ```
 kubectl label deployment nginx-deployment tier=dev
 ```
@@ -169,6 +183,7 @@ Na teoria: É frequentemente usado para garantir a disponibilidade de um número
 * Na prática: É raramente utilizado diretamente. Motivo: versionamento.
 
 * Exemplo:
+
 ```
 apiVersion: apps/v1
 kind: ReplicaSet
@@ -194,33 +209,39 @@ spec:
 ```
 	
 *Criar ReplicaSet
+
 ```
 kubectl create -f rs-frontend.yaml
 ```
 
 *Listar ReplicaSets e Pods
+
 ```
 kubectl get rs
 kubectl get pods -o wide
 ```
 
 *Mostrar detalhes do ReplicaSet
+
 ```
 kubectl describe rs frontend
 ```
 
 *Escalar um ReplicaSet
+
 ```
 kubectl scale --replicas 3 rs frontend
 kubectl scale --replicas 1 rs frontend
 ```
 
 *Deletar um ReplicaSet
+
 ```
 kubectl delete rs frontend
 ```
 
 *Deletar todos os Pods e ReplicaSets
+
 ```
 kubectl delete pod,rs --all
 ```
@@ -243,7 +264,7 @@ Atualizações: é possível alterar a imagem de um container para uma nova vers
 Self-healing: se um dos Pods for acidentalmente destruído, o Deployment vai imediatamente iniciar um novo Pod para substituí-lo.
 
 	
-*Exemplo
+* Exemplo:
 	
 ```
 apiVersion: apps/v1
@@ -264,100 +285,127 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: nginx:1.14.2
+        image: nginx
         ports:
         - containerPort: 80
 ```
 	
 
 * Criar Deployment, abordagem imperativa
+
 ```
 kubectl create deployment http-deployment --image=nginx
 ```
 	
 * Listar Pods, ReplicaSet e Deployments
-```
-kubectl get pods
-kubectl get rs
-kubectl get deployments
-```
-* Aumentar a quantidade de réplicas 
-```
-kubectl scale --replicas 3 deployment http-deployment
-```
-	
-* Diminuir a quantidade de réplicas 
-```
-kubectl scale --replicas 2 deployment http-deployment
-```
-	
-* Listar os deployments
-```
-kubectl get deployments
-```
-	
-* Mostrar detalhes de um deployment
-```
-kubectl describe deployment http-deployment
-```
-* Nova versão da aplicação
-	
-#### Exemplo Prático
-Criar Deployment
-```
-kubectl create deployment nginx-deployment --image=nginx:1.7.9
-```
-	
-* Listar Pods, ReplicaSet e Deployments
+
 ```
 kubectl get pods
 kubectl get rs
 kubectl get deployments
 ```
 
-* Escalar o Deployment
+* Aumentar a quantidade de réplicas 
+
 ```
-kubectl scale --replicas 3 deployment nginx-deployment
+kubectl scale --replicas 3 deployment http-deployment
 ```
-* Atualizar o Deployment com uma nova versão da aplicação
+	
+* Diminuir a quantidade de réplicas 
+
+```
+kubectl scale --replicas 2 deployment http-deployment
+```
+	
+* Listar os deployments
+
+```
+kubectl get deployments
+```
+	
+* Mostrar detalhes de um deployment
+
+```
+kubectl describe deployment http-deployment
+```
+
+* Nova versão da aplicação
+	
+#### ATIVIDADE PRÁTICA
+	
+* Criar Deployment do nginx 1.20 utilizando um arquivo de manifesto e com 2 réplicas.
+
+```
+?
+```
+	
+* Listar Pods, ReplicaSet e Deployments e verificar se está tudo OK.
+
+```
+kubectl get pods
+kubectl get rs
+kubectl get deployments
+```
+
+* Escalar o Deployment com ou comando abaixo ou através do arquivo de manifesto
+	
+```
+kubectl scale --replicas 3 deployment <nome_do_deployment>
+```
+
+* Atualizar o Deployment com uma nova versão da aplicação. Consultar no Docker Hub uma versão do nginx diferente da atual.
+	
+Você pode utilizar como exemplo o comando abaixo ou alterar o arquivo de manifesto.
+
 ```
 kubectl set image deployment/nginx-deployment nginx=nginx:1.91 --record
 ```
 	
 * Mostrar detalhes do Deployment
+
 ```
 kubectl describe deployment nginx-deployment
 ```
 	
 * Verificar status da atualização
+
 ```
 kubectl rollout status deployment nginx-deployment
 ```
 	
 * Listar Deployments
+
 ```
 kubectl get deployments
 ```
-	
-* Em caso de erro, desfazer a atualização
+
+
+* Simule uma situação de erro, por exemplo, coloque uma versão inexistente do nginx. Desfazer a atualização
+
 ```
-kubectl rollout undo deployment.v1.apps/nginx-deployment
+kubectl rollout undo deployment.v1.apps/<nome_do_deployment>
 ```
+
 * Mostrar detalhes do Deployment
+
 ```
 kubectl describe deployment nginx-deployment
 ```
+
 * Atualizar o Deployment com a versão correta da aplicação
+
 ```
-kubectl set image deployment/nginx-deployment nginx=nginx:1.9.1 --record
+kubectl set image deployment/nginx-deployment nginx=nginx:1.21 --record
 ```
 	
 * Verificar status da atualização
+
 ```
 kubectl rollout status deployment/<nome_do_deployment>
 ```
 	
 * Exibir historico de deployments
+
 ```
 kubectl rollout history deployment/<nome_do_deployment>
 ```	
@@ -379,8 +427,26 @@ Embora cada Pod tenha um endereço IP único, estes IPs não são expostos exter
 	
 ![image](https://user-images.githubusercontent.com/66180145/151550260-9f6b2264-6701-4b05-a4bd-12a8f6a15d1b.png)
 
+* Exemplo de Service NodePort:
+
+```
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-svc
+spec:
+  type: ?
+  selector:
+    app: ?
+  ports:
+    - protocol: TCP
+      port: ?
+      targetPort: ?
+```
 	
-* Exemplo de Service:
+	
+* Exemplo de Service LoadBalancer:
+
 ```
 apiVersion: v1
 kind: Service
@@ -397,6 +463,128 @@ spec:
 ```
 
 
+# KUBERNETES COM KUBEADM (Cluster)
 
 
+## Instalando um Cluster Kubernetes utilizando o Kubeadm
 
+__Seguindo essa documentação/tutorial você conseguirá criar um cluster Kuberntes.__
+
+* SO:
+
+ __Ubuntu 18.04 LTS__ ou __Ubuntu 20.04 LTS__.
+
+Nesse laboratório vamos criar um nó master e dois worker node.
+
+### Definições:
+
+|Função|IP|OS|RAM|CPU|
+|----|----|----|----|----|
+|Master|192.168.1.100|Ubuntu 18.04|2G|2|
+|Worker1|192.168.1.101|Ubuntu 18.04|1G|1|
+|Worker2|192.168.1.101|Ubuntu 18.04|1G|1|
+
+### Executar no Master e nos Workers
+
+##### Faça login com o usuário `root` 
+
+```
+sudo su -
+```
+
+Execute todos os comandos como usuário root, a menos que especificado de outra forma
+
+##### Desabilitar Firewall
+
+```
+ufw disable
+```
+
+##### Desabilitar swap
+```
+swapoff -a; sed -i '/swap/d' /etc/fstab
+```
+
+##### Atualizar as configurações do sysctl para a rede Kubernetes
+```
+cat >>/etc/sysctl.d/kubernetes.conf<<EOF
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+EOF
+sysctl --system
+```
+
+##### Instalar docker engine
+Alternativamente, você pode fazer a instalação através do script de instalação
+```
+  apt install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+  add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+  apt update
+  apt install -y docker-ce containerd.io
+
+```
+### Kubernetes Setup
+##### Adicionar repositorio ao apt Apt
+```
+
+  curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+  echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" > /etc/apt/sources.list.d/kubernetes.list
+
+```
+##### Instalar componentes do Kubernetes 
+```
+apt update && apt install -y kubeadm=1.18.5-00 kubelet=1.18.5-00 kubectl=1.18.5-00
+```
+
+
+## Somente no MASTER
+##### Inicializar Cluster Kubernetes 
+Atualize o comando abaixo com o endereço IP do Master
+```
+kubeadm init --apiserver-advertise-address=172.16.16.100 --pod-network-cidr=192.168.0.0/16  --ignore-preflight-errors=all
+```
+##### Deploy network
+[Saiba mais](https://kubernetes.io/pt-br/docs/concepts/cluster-administration/networking/#:~:text=Kubernetes%20%C3%A9%20basicamente%20o%20compartilhamento,tentem%20utilizar%20as%20mesmas%20portas.)
+
+Escolha somente um tipo abaixo:
+
+* Flannel
+
+```
+kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
+```
+
+* Calico
+
+```
+kubectl --kubeconfig=/etc/kubernetes/admin.conf create -f https://docs.projectcalico.org/v3.14/manifests/calico.yaml
+```
+
+##### Consultar comando para adicionar os Workers ao Cluster 
+```
+kubeadm token create --print-join-command
+```
+
+##### Para poder executar comandos kubectl como usuário não root
+Para poder executar comandos junto ao cluster Kubernetes 
+```
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+```
+
+## Workers
+##### Adicionar ao Cluster
+Use o comando `kubeadm token create --print-join-command` para gerar o token de acesso ao cluster.
+
+## Verificar o Cluster (no Master)
+
+```
+kubectl get nodes
+```
+
+```
+kubectl get cs
+```
+Muito bem, você acaba de concluir a configuração de um cluster Kubernetes. 
