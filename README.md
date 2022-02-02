@@ -588,3 +588,9 @@ kubectl get nodes
 kubectl get cs
 ```
 Muito bem, você acaba de concluir a configuração de um cluster Kubernetes. 
+	
+	
+
+## Exercício prático
+Segue link do exercício comentado durante a aula. Você deve implementar o exercícos e enviar um print dele funcionando do grupo do Whatsapp.
+[Exercício](https://kubernetes.io/docs/tutorials/stateless-application/guestbook/)
