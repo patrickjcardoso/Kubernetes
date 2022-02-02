@@ -1,5 +1,11 @@
 # Kubernetes
 
+
+## Sumário
+
+1. [KUBERNETES COM MINIKUBE (Single Node)](https://github.com/patrickjcardoso/Kubernetes/edit/main/README.md#kubernetes-com-minikube-single-node)
+2. [KUBERNETES COM KUBEADM (Cluster)](https://github.com/patrickjcardoso/Kubernetes/edit/main/README.md#kubernetes-com-kubeadm-cluster)
+
 # KUBERNETES COM MINIKUBE (Single Node)
 
 1º Instalar o docker
@@ -55,16 +61,19 @@ kubectl describe pod etcd-minikube -n kube-system
 
 ### Criando meu primeiro Pod
 * Abordagem Imperativa: 
+
 ```
 kubectl run meunginx --image=nginx 
 ```
 
 * Deletar Pod
+
 ```
 ?
 ```
 
 * Abordagem Declarativa, utilizando manifesto yaml
+
 Criar um arquivo com a extensão .yaml, exemplo: meu-pod.yaml
 ```
 apiVersion: v1
@@ -85,11 +94,13 @@ kubectl port-forward pod/meupod 8080:80
 ### Exportando manifesto de um Pod
 
 * Salva manifesto de um Pod
+
 ```
 kubectl get pod my-pod -o yaml > my-pod.yaml
 ```
 
 * Salva manifesto sem informações específicas do cluster
+
 ```
 kubectl get pod my-pod -o yaml --export  > my-pod.yaml
 ```
@@ -419,10 +430,10 @@ O conjunto de Pods selecionados por um Serviço é geralmente determinado por um
 	
 Embora cada Pod tenha um endereço IP único, estes IPs não são expostos externamente ao cluster sem um Serviço. Serviços permitem que suas aplicações recebam tráfego. Serviços podem ser expostos de formas diferentes especificando um tipo type na especificação do serviço ServiceSpec:
 
-* ClusterIP (padrão) - Expõe o serviço sob um endereço IP interno no cluster. Este tipo faz do serviço somente alcançável de dentro do cluster.
-* NodePort - Expõe o serviço sob a mesma porta em cada nó selecionado no cluster usando NAT. Faz o serviço acessível externamente ao cluster usando <NodeIP>:<NodePort>. Superconjunto de ClusterIP.
-* LoadBalancer - Cria um balanceador de carga externo no provedor de nuvem atual (se suportado) e assinala um endereço IP fixo e externo para o serviço. Superconjunto de NodePort.
-* ExternalName - Expõe o serviço usando um nome arbitrário (especificado através de externalName na especificação spec) retornando um registro de CNAME com o nome. Nenhum proxy é utilizado. Este tipo requer v1.7 ou mais recente de kube-dns.
+* __ClusterIP (padrão)__ - Expõe o serviço sob um endereço IP interno no cluster. Este tipo faz do serviço somente alcançável de dentro do cluster.
+* __NodePort__ - Expõe o serviço sob a mesma porta em cada nó selecionado no cluster usando NAT. Faz o serviço acessível externamente ao cluster usando <NodeIP>:<NodePort>. Superconjunto de ClusterIP.
+* __LoadBalancer__ - Cria um balanceador de carga externo no provedor de nuvem atual (se suportado) e assinala um endereço IP fixo e externo para o serviço. Superconjunto de NodePort.
+* __ExternalName__ - Expõe o serviço usando um nome arbitrário (especificado através de externalName na especificação spec) retornando um registro de CNAME com o nome. Nenhum proxy é utilizado. Este tipo requer v1.7 ou mais recente de kube-dns.
 
 	
 ![image](https://user-images.githubusercontent.com/66180145/151550260-9f6b2264-6701-4b05-a4bd-12a8f6a15d1b.png)
@@ -592,5 +603,9 @@ Muito bem, você acaba de concluir a configuração de um cluster Kubernetes.
 	
 
 ## Exercício prático
-Segue link do exercício comentado durante a aula. Você deve implementar o exercícos e enviar um print dele funcionando do grupo do Whatsapp.
-[Exercício](https://kubernetes.io/docs/tutorials/stateless-application/guestbook/)
+Acessar o [Exemplo](https://kubernetes.io/docs/tutorials/stateless-application/guestbook/) e implementar de forma prática. 
+* Caso tenha dificuldade ou dívidas, solicite apoio no grupo do Whatsapp.
+* Ao finalizar exercício, enviar um print da tela do aplicativo funcionando.
+
+
+
