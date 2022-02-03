@@ -3,8 +3,8 @@
 
 ## Sumário
 
-1. [KUBERNETES COM MINIKUBE (Single Node)](https://github.com/patrickjcardoso/Kubernetes/edit/main/README.md#kubernetes-com-minikube-single-node)
-2. [KUBERNETES COM KUBEADM (Cluster)](https://github.com/patrickjcardoso/Kubernetes/edit/main/README.md#kubernetes-com-kubeadm-cluster)
+1. [KUBERNETES COM MINIKUBE (Single Node)](https://github.com/patrickjcardoso/Kubernetes#kubernetes-com-minikube-single-node)
+2. [KUBERNETES COM KUBEADM (Cluster)](https://github.com/patrickjcardoso/Kubernetes#kubernetes-com-kubeadm-cluster)
 
 # KUBERNETES COM MINIKUBE (Single Node)
 
@@ -473,6 +473,66 @@ spec:
       targetPort: 3306	
 ```
 
+### EndPoints
+
+Todo o Service deve possuir endepoints saudáveis para que possa encaminhar o tráfego, sendo esse objetivo denominado EndPoint.
+Um Endpoint nada mais é que uma lista de todos os IPs dos PODs que tem Match no Selector utilizado no Service em questão.
+O Controllador interno do Kubernetes chega continuamente todos os PODs checando pelas LABELS definidas nos SELECTOR e atribui via POST ao EndPoint do Service.
+
+*  Endpoints não necessariamente apontam para um POD, um Sevice sem um SELECTOR pode ter seu Endpoint criado manualmente para apontar para um IP ou DNS qualquer a sua escolha. 
+
+
+[Exemplo prático](https://theithollow.com/2019/02/04/kubernetes-endpoints/)
+
+
+
+## Ingress Controller 
+[Referências](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/
+)
+
+Ao contrário de outros tipos de controladores que são executados como parte do kube-controller-managerbinário, os controladores do Ingress não são iniciados automaticamente com um cluster.
+
+O Ingress expõe as rotas HTTP e HTTPS de fora do cluster para serviços dentro do cluster. O roteamento de tráfego é controlado por regras definidas no recurso Ingress.
+
+__IMAGEM__
+
+Para que o Ingress controller tenha essas informações de Rotas, precisamos criar um novo tipo de Objeto chamado Ingress.
+Esse objeto irá ter as definições de DNS de Origem, Certificado, Destino...
+
+
+
+
+1. Instalar o Helm
+
+https://helm.sh/docs/intro/install/
+
+```
+#Utilizando Script de Instalação
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+chmod 700 get_helm.sh
+./get_helm.sh
+```
+
+2. Instalar o Nginx Ingress
+
+https://kubernetes.github.io/ingress-nginx/deploy/#quick-start
+
+
+```
+helm upgrade --install ingress-nginx ingress-nginx \
+  --repo https://kubernetes.github.io/ingress-nginx \
+  --namespace ingress-nginx --create-namespace
+```
+
+
+3.
+
+
+
+
+
+
+
 
 # KUBERNETES COM KUBEADM (Cluster)
 
@@ -545,7 +605,7 @@ Alternativamente, você pode fazer a instalação através do script de instala�
 ```
 ##### Instalar componentes do Kubernetes 
 ```
-apt update && apt install -y kubeadm=1.18.5-00 kubelet=1.18.5-00 kubectl=1.18.5-00
+apt update && apt install -y kubeadm=1.20.0-00 kubelet=1.20.0-00 kubectl=1.20.0-00
 ```
 
 
@@ -606,6 +666,270 @@ Muito bem, você acaba de concluir a configuração de um cluster Kubernetes.
 Acessar o [Exemplo](https://kubernetes.io/docs/tutorials/stateless-application/guestbook/) e implementar de forma prática. 
 * Caso tenha dificuldade ou dívidas, solicite apoio no grupo do Whatsapp.
 * Ao finalizar exercício, enviar um print da tela do aplicativo funcionando.
+
+
+
+## DaemonSet
+
+Um DaemonSet garante que todos (ou alguns) nós executem uma cópia de um pod. À medida que os nós são adicionados ao cluster, os pods são adicionados a eles. À medida que os nós são removidos do cluster, esses pods são coletados como lixo. A exclusão de um DaemonSet limpará os pods que ele criou.
+
+Alguns usos típicos de um DaemonSet são:
+
+executando um daemon de armazenamento de cluster em cada nó
+executando um daemon de coleta de logs em cada nó
+executando um daemon de monitoramento de nó em cada nó
+
+[Referências e saiba mais](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/)
+
+Exemplo:
+```
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: example-daemonset
+  namespace: default
+  labels:
+    app: example-daemonset
+spec:
+  selector:
+    matchLabels:
+      name: example-daemonset
+  template:
+    metadata:
+      labels:
+        name: example-daemonset
+    spec:
+      tolerations:
+      # this toleration is to have the daemonset runnable on master nodes
+      # remove it if your masters can't run pods
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      containers:
+      - name: example-daemonset
+        image: alpine:latest
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        command:
+        - "bin/sh"
+        - "-c"
+        - "echo 'Hello! I am running on '$NODE_NAME; while true; do sleep 300s ; done;"
+        resources:
+          limits:
+            memory: 200Mi
+          requests:
+            cpu: 100m
+            memory: 200Mi
+      terminationGracePeriodSeconds: 30
+```
+[Fonte](https://github.com/marcel-dempers/docker-development-youtube-series/tree/master/kubernetes/daemonsets)
+
+
+## StateFull Set
+
+Um StatefulSet gerência pods que são baseados em uma especificação de contêiner idêntica. Ao contrário de uma implantação(Deployment), um StatefulSet mantém uma identidade fixa para cada um de seus pods.
+
+Esses pods são criados a partir da mesma especificação, mas não são intercambiáveis: cada um tem um identificador persistente que mantém em qualquer reprogramação.
+
+Se quiser usar volumes de armazenamento para fornecer persistência para sua carga de trabalho, você pode usar um StatefulSet como parte da solução. Embora os pods individuais em um StatefulSet sejam suscetíveis a falhas, os identificadores de pod persistentes facilitam a correspondência dos volumes existentes com os novos pods que substituem os que falharam.
+
+[Referências e saiba mais](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/)
+
+Exemplo:
+
+```
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+  labels:
+    app: nginx
+spec:
+  ports:
+  - port: 80
+    name: web
+  clusterIP: None
+  selector:
+    app: nginx
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: web
+spec:
+  selector:
+    matchLabels:
+      app: nginx # has to match .spec.template.metadata.labels
+  serviceName: "nginx"
+  replicas: 3 # by default is 1
+  minReadySeconds: 10 # by default is 0
+  template:
+    metadata:
+      labels:
+        app: nginx # has to match .spec.selector.matchLabels
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: nginx
+        image: k8s.gcr.io/nginx-slim:0.8
+        ports:
+        - containerPort: 80
+          name: web
+        volumeMounts:
+        - name: www
+          mountPath: /usr/share/nginx/html
+  volumeClaimTemplates:
+  - metadata:
+      name: www
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "my-storage-class"
+      resources:
+        requests:
+          storage: 1Gi
+```
+
+
+## Limitar Recursos Computacionais
+
+[Referências](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/)
+
+* __Objetivo__
+
+Definir quanto de recurso computacional (CPU e Memória) um POD deveria/pode consumir em meu ambiente.
+
+* __Motivação__
+
+Evitar que um POD consuma todos os recursos computacionais de um Node;
+
+Evitar que devido ao alto consumo de um POD outro seja degradado;
+
+Garantir a correta distribuição de carga entres os Nodes;
+
+
+* Exemplo:
+
+O pod a seguir tem dois contêineres. Ambos os contêineres são definidos com uma solicitação de 0,25 CPU e 64MiB (2 26 bytes) de memória. Cada contêiner tem um limite de 0,5 CPU e 128MiB de memória. Você pode dizer que o Pod tem uma solicitação de 0,5 CPU e 128 MiB de memória e um limite de 1 CPU e 256MiB de memória.
+
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: frontend
+spec:
+  containers:
+  - name: app
+    image: images.my-company.example/app:v4
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+  - name: log-aggregator
+    image: images.my-company.example/log-aggregator:v6
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+```
+
+
+
+## O que são configMaps e Secrets?
+
+Secrets e ConfigMaps possuem comportamentos similares, porém com Objetivos diferentes.
+
+* __ConfigMaps:__  Um objeto que contém dados não confidenciais, como arquivos de configuração da aplicação, esses dados podem ser montados em um ou mais __Pods__ como __Arquivo__ ou __Variáveis de ambiente__;
+
+* __Secret:__ Um objeto que contém uma pequena quantidade de dados confidenciais, como uma senha, um token ou uma chave. Essas informações podem ser colocadas em um ou mais __Pods__ como __Arquivo__ ou __Variáveis de ambiente__;Isso evita que deixe dados confidenciais diretamente em sua aplicação;
+
+
+### ConfigMaps
+
+[configMaps](https://kubernetes.io/docs/concepts/configuration/configmap/)
+
+Exemplo:
+
+Fonte: https://github.com/xcad2k/boilerplates/tree/main/kubernetes/templates/cm-and-secrets
+
+* Criar os dois arquivos e aplicar: nginx-http-cm.yaml nginx-http-deploy.yml 
+
+* Acessar o container
+
+```
+kubectl exec -it <nome_do_container> -- /bin/bash
+
+cd /etc/nginx/
+ls
+cat
+cat nginx.conf
+```
+
+* Criar o arquivo do Service tipo NodePort: nginx-http-svc.yml 
+
+Acessar a aplicação
+
+
+#### Secrets
+
+[Secrets](https://kubernetes.io/docs/concepts/configuration/secret/)
+
+Exemplo:
+
+Fonte: https://github.com/xcad2k/boilerplates/tree/main/kubernetes/templates/cm-and-secrets
+
+* Criar os dois arquivos e aplicar: mysql-deploy.yaml e mysql-secret.yml 
+
+* Acessar o container
+
+
+```
+kubectl get secrets
+
+kubectl edit secrets mysql-secret
+
+# Acessar o pod
+kubectl exec -it <nome_do_container> -- /bin/bash
+
+#Conectar ao mySQL
+mysql -p
+
+
+
+```
+
+
+
+## O que é NodeSelector?
+
+[Referências](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/)
+
+Você pode restringir um __Pod__ que ele só possa ser executado em um conjunto específico de Nós. Existem várias maneiras de fazer isso e todas as abordagens recomendadas usam seletores de rótulos para facilitar a seleção. Geralmente, __essas restrições são desnecessárias__, pois o agendador fará automaticamente um posicionamento razoável (por exemplo, espalhar seus pods entre nós para não colocar o pod em um nó com recursos livres insuficientes etc.), mas há __algumas circunstâncias__ em que você pode querer controlar em qual nó o pod é implantado - __por exemplo, para garantir que um pod termine em uma máquina com um SSD conectado__ a ele ou para colocar pods de dois serviços diferentes que se comunicam muito na mesma zona de disponibilidade.
+
+
+Itens faltando:
+* Subindo containers no Nó Master
+* O que é um Daemon Set?
+* O que é um StateFull Set? 
+* O que é um EndPoint?
+* O que é NodeSelector?
+* Como definir limitar recursos computacionais? 
+* O que são configMaps e Secrets? 
+
+
+* O que é um Ingress?  -> demostrar
+	* Instalando o Ingress-nginx
+
+
+
+
 
 
 
