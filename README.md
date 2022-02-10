@@ -494,41 +494,139 @@ Ao contrário de outros tipos de controladores que são executados como parte do
 
 O Ingress expõe as rotas HTTP e HTTPS de fora do cluster para serviços dentro do cluster. O roteamento de tráfego é controlado por regras definidas no recurso Ingress.
 
-__IMAGEM__
+![image](https://user-images.githubusercontent.com/66180145/153482712-6081cb72-8b43-42b5-9526-32b6c83d3aa6.png)
 
 Para que o Ingress controller tenha essas informações de Rotas, precisamos criar um novo tipo de Objeto chamado Ingress.
 Esse objeto irá ter as definições de DNS de Origem, Certificado, Destino...
 
-
-
-
-1. Instalar o Helm
-
-https://helm.sh/docs/intro/install/
+1. Criar o Deployment e o Service abaixo:
 
 ```
-#Utilizando Script de Instalação
-curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
-chmod 700 get_helm.sh
-./get_helm.sh
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simple-api
+  labels:
+    app: simple-api
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: simple-api
+  template:
+    metadata:
+      labels:
+        app: simple-api
+    spec:
+      containers:
+      - name: simple-api
+        image: gustavoleitao/simple-api:1.0.0
+        ports:
+        - containerPort: 3000
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: simple-api
+  labels:
+    app: simple-api
+spec:
+  type: NodePort
+  ports:
+  - port: 3000
+    targetPort: 3000
+    nodePort: 30007
+  selector:
+    app: simple-api 
 ```
 
-2. Instalar o Nginx Ingress
+Não vem por padrão instalado junto com o Kubernetes.
+
+1. Instalar o Nginx Ingress
 
 https://kubernetes.github.io/ingress-nginx/deploy/#quick-start
 
+Baixar o arquivo yaml e aplicar. tag 0.42.0
 
 ```
-helm upgrade --install ingress-nginx ingress-nginx \
-  --repo https://kubernetes.github.io/ingress-nginx \
-  --namespace ingress-nginx --create-namespace
+kubectl get pods -n ingress-nginx
+
+kubectl get svc -n ingress-nginx
+
+```
+2. Testando o Ingress.
+
+```
+curl <End_IP_no_Cluster>:<Porta_alta>
+```
+
+* Você receberá uma resposta de Not Found, Ingress Controler não sabe para quem encaminhar.
+
+3. Editar o arquivo /etc/hosts
+
+```
+#adicionar o ip e um domínio ficticio
+10.0.0.71       simpleapi.com.br
+```
+
+* Pingar o domínio
+
+* Fazer um curl no domínio com a porta alta.
+
+4. Editar o arquivo ingresscontroler.yaml e adicionar os compos abaixo:
+
+
+* procurar pela linha NodePort
+
+```
+spec:
+  type: NodePort
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: http
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: https
+  selector:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/component: controller
+#adicionar as linhas abaixo
+  externalIPs:
+    - 10.0.0.71
+
+
 ```
 
 
-3.
+5. Criar o Arquivo do Ingress
 
 
+```
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: simple-api-ing
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  rules:
+  - host: simpleapi.com.br
+    http:
+      paths:
+        - path: /
+          backend:
+            serviceName: simple-api
+            servicePort: 3000
 
+```
 
 
 
@@ -912,20 +1010,6 @@ mysql -p
 [Referências](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/)
 
 Você pode restringir um __Pod__ que ele só possa ser executado em um conjunto específico de Nós. Existem várias maneiras de fazer isso e todas as abordagens recomendadas usam seletores de rótulos para facilitar a seleção. Geralmente, __essas restrições são desnecessárias__, pois o agendador fará automaticamente um posicionamento razoável (por exemplo, espalhar seus pods entre nós para não colocar o pod em um nó com recursos livres insuficientes etc.), mas há __algumas circunstâncias__ em que você pode querer controlar em qual nó o pod é implantado - __por exemplo, para garantir que um pod termine em uma máquina com um SSD conectado__ a ele ou para colocar pods de dois serviços diferentes que se comunicam muito na mesma zona de disponibilidade.
-
-
-Itens faltando:
-* Subindo containers no Nó Master
-* O que é um Daemon Set?
-* O que é um StateFull Set? 
-* O que é um EndPoint?
-* O que é NodeSelector?
-* Como definir limitar recursos computacionais? 
-* O que são configMaps e Secrets? 
-
-
-* O que é um Ingress?  -> demostrar
-	* Instalando o Ingress-nginx
 
 
 
