@@ -577,60 +577,59 @@ Se quiser usar volumes de armazenamento para fornecer persistência para sua car
 
 #### Criando um StatefulSets
 
-Exemplo:
+* Utilize o arquivo exStatefulset.yaml
 
+* Crie um Stateful set
+
+1. Verifique o processo de criação dos pods
 ```
-apiVersion: v1
-kind: Service
-metadata:
-  name: nginx
-  labels:
-    app: nginx
-spec:
-  ports:
-  - port: 80
-    name: web
-  clusterIP: None
-  selector:
-    app: nginx
----
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: web
-spec:
-  selector:
-    matchLabels:
-      app: nginx # has to match .spec.template.metadata.labels
-  serviceName: "nginx"
-  replicas: 3 # by default is 1
-  minReadySeconds: 10 # by default is 0
-  template:
-    metadata:
-      labels:
-        app: nginx # has to match .spec.selector.matchLabels
-    spec:
-      terminationGracePeriodSeconds: 10
-      containers:
-      - name: nginx
-        image: k8s.gcr.io/nginx-slim:0.8
-        ports:
-        - containerPort: 80
-          name: web
-        volumeMounts:
-        - name: www
-          mountPath: /usr/share/nginx/html
-  volumeClaimTemplates:
-  - metadata:
-      name: www
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      storageClassName: "my-storage-class"
-      resources:
-        requests:
-          storage: 1Gi
+kubectl get pods -w -l app=nginx
+```
+2. Verifique o Serviço:
+```
+kubectl get svc
+```
+4. Verifique o Statefulset
+```
+kubectl get statefulsets
+kubectl describe statefulset web
+#Você pode editar se for necessário
+kubectl edit statefulset web
 ```
 
+5. Aumente e depois diminua a escala de um statefulset
+```
+kubectl scale statefulset web --replicas=5
+```
+
+6. Excluindo o Statefulset
+```
+kubectl delete statefulset web 
+kubectl delete svc nginx
+kubectl delete persistentvolumeclaims myclaim
+```
+
+[Fonte](https://medium.com/avmconsulting-blog/deploying-statefulsets-in-kubernetes-k8s-5924e701d327)
+
+#### Exemplo Prático
+
+[Implantando WordPress e MySQL com Volumes Persistentes](https://kubernetes.io/docs/tutorials/stateful-application/mysql-wordpress-persistent-volume/)
+
+Baixe os arquivos:
+* kustomization.yaml
+* mysql-deployment.yaml
+* wordpress-deployment.yaml
+
+Aplicar as configurações:
+```
+kubectl create -k ./
+```
+Expor a aplicação no host
+```
+kubectl port-forward svc/wordpress 8080:80
+```
+
+* Testar
 
 ## Limitar Recursos Computacionais
 
