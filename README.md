@@ -3,11 +3,11 @@
 
 ## Sumário
 
-1. [KUBERNETES COM MINIKUBE (Single Node)](https://github.com/patrickjcardoso/Kubernetes#kubernetes-com-minikube-single-node)
-2. [KUBERNETES COM KUBEADM (Cluster)](https://github.com/patrickjcardoso/Kubernetes#kubernetes-com-kubeadm-cluster)
+1. [Kubernetes com MINIKUBE (Single Node)](https://github.com/patrickjcardoso/Kubernetes#kubernetes-com-minikube-single-node)
+2. [Kubernetes com KIND]()
+2. [Kubernetes com KUBEADM (Cluster)](https://github.com/patrickjcardoso/Kubernetes#kubernetes-com-kubeadm-cluster)
 
-# KUBERNETES COM MINIKUBE (Single Node)
-
+### Instalar o Docker
 1º Instalar o docker
 ```
 curl -fsSL https://get.docker.com -o get-docker.sh
@@ -18,7 +18,7 @@ Usar docker sem ser root
 sudo usermod -aG docker ${USER}
 ```
 
-2º Instalar o Kubectl
+### Instalar o Kubectl
 
 [Tutorial Oficial:](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/)
 
@@ -26,11 +26,14 @@ Autocomplete Kubectl:
 ```
 kubectl completion bash | sudo tee /etc/bash_completion.d/kubectl > /dev/null
 ```
-3º Instalar o MiniKube
+
+## KUBERNETES COM MINIKUBE (Single Node)
+
+Instalar o MiniKube
 [Tutorial Oficial:](https://minikube.sigs.k8s.io/docs/start/)
 
 
-## MiniKube Comandos básicos
+### MiniKube Comandos básicos
 ```
 minikube start
 
@@ -40,6 +43,44 @@ minikube delete
 
 minikube delete --all
 ```
+
+## KUBERNETES COM KIND
+
+kind é uma ferramenta para executar clusters locais do Kubernetes usando “nós” de contêiner do Docker.
+kind foi projetado principalmente para testar o próprio Kubernetes, mas pode ser usado para desenvolvimento local ou CI.
+
+
+[Documentação Oficial](https://kind.sigs.k8s.io/docs/user/quick-start/)
+
+__Requisitos:__
+* Docker Instalado 
+
+On Linux:
+```
+curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.11.1/kind-linux-amd64
+chmod +x ./kind
+sudo mv ./kind /usr/local/bin/
+```
+
+### Primeiros comandos:
+
+```
+#Verificar se o 
+kind
+#Ativar auto complete
+source <(kind completion bash)
+```
+
+* Criando um cluster com Kind
+```
+kind create cluster --name o2bacademy
+```
+
+* Criando um cluster com vários nós
+kind create cluster --name o2bacademy --config arquivodeconfiguração.yaml
+
+
+## KUBERNETES
 
 ### Atividade 01 - Criando meu primeiro cluster
 
@@ -59,11 +100,24 @@ kubectl get namespaces
 kubectl describe pod etcd-minikube -n kube-system
 ```
 
+## Pods
+
+[Documentação Oficial](https://kubernetes.io/docs/concepts/workloads/pods/)
+
+Os pods são as menores unidades de computação implantáveis que você pode criar e gerenciar no Kubernetes.
+
+Em termos de conceitos do Docker, um Pod é semelhante a um grupo de contêineres do Docker com namespaces compartilhados e volumes de sistema de arquivos compartilhados.
+
 ### Criando meu primeiro Pod
+
 * Abordagem Imperativa: 
 
 ```
-kubectl run meunginx --image=nginx 
+kubectl run meunginx --image=nginx:1.14.2
+
+# ou
+
+kubectl run meuapache --image=httpd:2.4
 ```
 
 * Deletar Pod
@@ -71,26 +125,6 @@ kubectl run meunginx --image=nginx
 ```
 ?
 ```
-
-* Abordagem Declarativa, utilizando manifesto yaml
-
-Criar um arquivo com a extensão .yaml, exemplo: meu-pod.yaml
-```
-apiVersion: v1
-kind: Pod
-metadata:
-  name: nginx-pod
-spec:
-  containers:
-  - name: nginx-container
-    image: nginx
-    ports:
-       - containerPort: 80
-```
-```
-kubectl port-forward pod/meupod 8080:80
-```
-
 ### Exportando manifesto de um Pod
 
 * Salva manifesto de um Pod
@@ -107,7 +141,43 @@ kubectl get pod my-pod -o yaml --export  > my-pod.yaml
 
 [Saiba mais sobre manifesto](https://medium.com/@sujithar37/understanding-the-kubernetes-manifest-97f44acc2cb9)
 
-### Criando Namespaces
+
+### Criando meu primeiro Pod com manifesto
+
+* Abordagem Declarativa, utilizando manifesto yaml
+
+Criar um arquivo com a extensão .yaml, exemplo: meu-pod.yaml
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod
+spec:
+  containers:
+  - name: nginx-container
+    image: nginx:1.14.2
+    ports:
+       - containerPort: 80
+```
+* Após criar um arquivo de manifesto, precisamos aplicá-lo;
+```
+kubectl apply -f <nomedoarquivo.yaml>
+
+# expondo uma pod
+kubectl port-forward pod/meupod 8080:80
+```
+Cada Pod deve executar uma única instância de um determinado aplicativo. Se você quiser dimensionar seu aplicativo horizontalmente (para fornecer mais recursos gerais executando mais instâncias), use vários pods, um para cada instância. No Kubernetes, isso geralmente é chamado de replicação . Os pods replicados geralmente são criados e gerenciados como um grupo por um recurso de carga de trabalho e seucontrolador.
+
+Você pode usar recursos de carga de trabalho para criar e gerenciar vários pods para você. Um controlador para o recurso lida com a replicação, a distribuição e a correção automática em caso de falha do pod. Por exemplo, se um nó falhar, um controlador perceberá que os pods nesse nó pararam de funcionar e cria um pod substituto. O agendador coloca o Pod substituto em um Node.
+
+Veja alguns exemplos de recursos de carga de trabalho que gerenciam um ou mais pods:
+
+* Deployment
+* StatefulSet
+* DaemonSet
+
+
+## Namespaces
 
 K8s usa namespaces para organizar objetos no cluster através de uma divisão lógica (como se fosse uma pasta).
 
@@ -117,6 +187,10 @@ Para usar um namespace específico, diferente do padrão, pode-se usar a flag --
 
 Para interagir com todos os namespaces, pode-se passar a flag --all-namespaces ou -A para o comando.
 
+![image](https://user-images.githubusercontent.com/66180145/156056187-36e6bed9-f887-4823-baa3-75f8a2b5e54b.png)
+Fonte: https://stacksimplify.com/
+
+### Criando Namespaces
 
 * Criar um novo namespaces
 
@@ -152,9 +226,12 @@ kubectl get pods -n teste
 ```
 
 
-### Labels
+## Labels
 
 [Referências](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/)
+
+![image](https://user-images.githubusercontent.com/66180145/156056539-ee908352-ebcc-4bc0-b9a0-5eb10858c429.png)
+Fonte: https://www.wecloudpro.com/2020/04/06/kubernetes-nodes-auto-label.html
 
 Um Label é um par chave-valor do tipo string.
 Todos os recursos/objetos K8s podem ser rotulados.
@@ -184,6 +261,12 @@ kubectl get pods -l 'environment in (production),tier in (frontend)'
 ```
 kubectl label deployment nginx-deployment tier=dev
 ```
+
+## Workload Resources - Recursos de Carga de Trabalho 
+
+Você pode usar recursos de carga de trabalho que gerenciam um conjunto de pods em seu nome (Labels e Selectors). Esses recursos configuram controladores que garantem que o número certo do tipo certo de pod esteja em execução, para corresponder ao estado que você especificou.
+
+O Kubernetes fornece vários recursos de carga de trabalho integrados:
 
 ### ReplicaSet
 
@@ -216,7 +299,7 @@ spec:
     spec:
       containers:
       - name: php-redis
-        image: gcr.io/google_samples/gb-frontend:v3
+        image: gcr.io/google_samples/hello-frontend:1.0
 ```
 	
 *Criar ReplicaSet
@@ -258,10 +341,14 @@ kubectl delete pod,rs --all
 ```
 
 1. Exercicio Versionamento:
-	Altera a versão da image no seu manifesto e após isso verifique se os pods foram atualizados após você aplicar essa alteração.
+
+Altere o nome ou a versão da image no seu manifesto, aplica as modificações e após isso verifique se os pods foram atualizados.
  
-	
-	
+
+* Outras considerações:
+
+Embora você possa criar pods vazios sem problemas, é altamente recomendável garantir que os pods vazios não tenham rótulos que correspondam ao seletor de um de seus ReplicaSets. A razão para isso é porque um ReplicaSet não se limita a possuir Pods especificados por seu modelo - ele pode adquirir outros Pods da maneira especificada nas seções anteriores.
+
 ### Deployment
 
 Um Deployment fornece atualizações declarativas para Pods e ReplicaSet.
@@ -274,8 +361,17 @@ Escalabilidade: com um Deployment, pode-se especificar o número de réplicas de
 Atualizações: é possível alterar a imagem de um container para uma nova versão e o Deployment vai gradualmente substituir os containers para a nova versão (evita downtime).
 Self-healing: se um dos Pods for acidentalmente destruído, o Deployment vai imediatamente iniciar um novo Pod para substituí-lo.
 
-	
-* Exemplo:
+![image](https://user-images.githubusercontent.com/66180145/156232007-72d8b9e8-427b-4bec-911f-2ed8f20b55c3.png)
+Fonte: https://www.bluematador.com/blog/kubernetes-deployments-rolling-update-configuration
+
+* Criar Deployment, abordagem imperativa
+
+```
+kubectl create deployment http-deployment --image=nginx
+```
+
+
+* Exemplo, abordagem declarativa:
 	
 ```
 apiVersion: apps/v1
@@ -296,24 +392,23 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: nginx
+        image: nginx:1.14.2
         ports:
         - containerPort: 80
 ```
 	
 
-* Criar Deployment, abordagem imperativa
-
-```
-kubectl create deployment http-deployment --image=nginx
-```
-	
 * Listar Pods, ReplicaSet e Deployments
 
 ```
 kubectl get pods
 kubectl get rs
-kubectl get deployments
+kubectl get deployments ou kubectl get deploy
+kubectl get pods --show-labels
+```
+* Verificar o Status da implatanção:
+```
+kubectl rollout status deployment/nginx-deployment
 ```
 
 * Aumentar a quantidade de réplicas 
@@ -328,12 +423,6 @@ kubectl scale --replicas 3 deployment http-deployment
 kubectl scale --replicas 2 deployment http-deployment
 ```
 	
-* Listar os deployments
-
-```
-kubectl get deployments
-```
-	
 * Mostrar detalhes de um deployment
 
 ```
@@ -341,86 +430,260 @@ kubectl describe deployment http-deployment
 ```
 
 * Nova versão da aplicação
-	
-#### ATIVIDADE PRÁTICA
-	
-* Criar Deployment do nginx 1.20 utilizando um arquivo de manifesto e com 2 réplicas.
+
+Siga as etapas abaixo para atualizar sua implantação:
+
+1. Vamos atualizar os pods nginx para usar a imagem nginx:1.20 em vez da nginx:1.14.2.
+
+Você pode fazer isso básicamente de três maneiras:
+
+* Editando o arquivo de manifesto:
+
+Altere o arquivo de manifesto e aplique as alterações.
+
+* De maneira Imperativa:
 
 ```
-?
+kubectl set image deployment/nginx-deployment nginx=nginx:1.20
 ```
-	
-* Listar Pods, ReplicaSet e Deployments e verificar se está tudo OK.
+
+* Editar o Deployment diretamente:
 
 ```
-kubectl get pods
+kubectl edit deployment/nginx-deployment
+```
+
+A implantação garante que apenas um determinado número de pods fique inativo enquanto estão sendo atualizados. Por padrão, ele garante que pelo menos 75% do número desejado de pods esteja ativo (máximo de 25% indisponível).
+
+A implantação também garante que apenas um determinado número de pods seja criado acima do número desejado de pods. Por padrão, ele garante que no máximo 125% do número desejado de Pods esteja ativo (25% de aumento máximo).
+	
+#### Revertendo uma implantação
+
+Às vezes, você pode querer reverter uma implantação; por exemplo, quando a implantação não é estável, como loop de falha. Por padrão, todo o histórico de distribuição da implantação é mantido no sistema para que você possa reverter a qualquer momento (você pode alterar isso modificando o limite do histórico de revisões).
+
+1. Suponha que você tenha cometido um erro de digitação ao atualizar a implantação, colocando o nome da imagem como nginx:1.161 em vez de nginx:1.16.1.
+* O lançamento fica travado. Você pode verificá-lo verificando o status do lançamento:
+```
+kubectl rollout status deployment/nginx-deployment
 kubectl get rs
-kubectl get deployments
 ```
+* Para corrigir isso, você precisa reverter para uma revisão anterior do Deployment que seja estável.
+
+* Verificar o histórico de lançamento de uma aplicação:
+```
+kubectl rollout history deployment/nginx-deployment
+```
+* Para ver os detalhes de cada revisão, execute:
+```
+kubectl rollout history deployment/nginx-deployment --revision=2
+```
+* Agora você decidiu desfazer a distribuição atual e reverter para a revisão anterior:
+```
+kubectl rollout undo deployment/nginx-deployment
+```
+
+#### ATIVIDADE PRÁTICA - 
+
+Você está responsável por fazer a implantação de uma aplicação que vai utilizar a imagem gcr.io/google_samples/echo-go:1.0
+
+1. Criar Deployment da aplicação utilizando um arquivo de manifesto e com 3 réplicas.
+
+* Utilize os comandos para verificar se sua implantação está correta. Liste os deployments, rs e pods.
 
 * Escalar o Deployment com ou comando abaixo ou através do arquivo de manifesto
 	
 ```
-kubectl scale --replicas 3 deployment <nome_do_deployment>
+kubectl scale --replicas 5 deployment <nome_do_deployment>
 ```
 
-* Atualizar o Deployment com uma nova versão da aplicação. Consultar no Docker Hub uma versão do nginx diferente da atual.
-	
-Você pode utilizar como exemplo o comando abaixo ou alterar o arquivo de manifesto.
+A equipe de desenvolvimento enviou para você uma nova imagem da aplicação chamada: gcr.io/google_samples/echo-go faça a atualização para a nova versão.
 
-```
-kubectl set image deployment/nginx-deployment nginx=nginx:1.91 --record
-```
-	
-* Mostrar detalhes do Deployment
+* Lembre-se de verificar se a atualização ocorreu normalmente.
 
-```
-kubectl describe deployment nginx-deployment
-```
-	
-* Verificar status da atualização
+Após um tempo, a equipe te enviou novamente uma nova versão que é: gcr.io/google_samples/echo-go:2.0 faça a atualização para a nova versão.
 
-```
-kubectl rollout status deployment nginx-deployment
-```
-	
-* Listar Deployments
+* Lembre-se de verificar se a atualização ocorreu normalmente.
 
-```
-kubectl get deployments
-```
+A equipe de desenvolvimento constatou alguns problemas e solicitou que você faça um rollback para a versão 1.0, faça a reversão e verifique se está tudo correto.
 
 
-* Simule uma situação de erro, por exemplo, coloque uma versão inexistente do nginx. Desfazer a atualização
+## DaemonSet
+
+Um DaemonSet garante que todos (ou alguns) nós executem uma cópia de um pod. À medida que os nós são adicionados ao cluster, os pods são adicionados a eles. À medida que os nós são removidos do cluster, esses pods são coletados como lixo. A exclusão de um DaemonSet limpará os pods que ele criou.
+
+Alguns usos típicos de um DaemonSet são:
+
+executando um daemon de armazenamento de cluster em cada nó
+executando um daemon de coleta de logs em cada nó
+executando um daemon de monitoramento de nó em cada nó
+
+[Referências e saiba mais](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/)
+
+Exemplo:
+```
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: example-daemonset
+  namespace: default
+  labels:
+    app: example-daemonset
+spec:
+  selector:
+    matchLabels:
+      name: example-daemonset
+  template:
+    metadata:
+      labels:
+        name: example-daemonset
+    spec:
+      tolerations:
+      # this toleration is to have the daemonset runnable on master nodes
+      # remove it if your masters can't run pods
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      containers:
+      - name: example-daemonset
+        image: alpine:latest
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        command:
+        - "bin/sh"
+        - "-c"
+        - "echo 'Hello! I am running on '$NODE_NAME; while true; do sleep 300s ; done;"
+        resources:
+          limits:
+            memory: 200Mi
+          requests:
+            cpu: 100m
+            memory: 200Mi
+      terminationGracePeriodSeconds: 30
+```
+[Fonte](https://github.com/marcel-dempers/docker-development-youtube-series/tree/master/kubernetes/daemonsets)
+
+
+### StatefulSets
+
+[Referências e saiba mais](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/)
+
+Um StatefulSet gerência pods que são baseados em uma especificação de contêiner idêntica. Ao contrário de uma implantação(Deployment), um StatefulSet mantém uma identidade fixa para cada um de seus pods.
+
+Esses pods são criados a partir da mesma especificação, mas não são intercambiáveis: cada um tem um identificador persistente que mantém em qualquer reprogramação.
+
+Se quiser usar volumes de armazenamento para fornecer persistência para sua carga de trabalho, você pode usar um StatefulSet como parte da solução. Embora os pods individuais em um StatefulSet sejam suscetíveis a falhas, os identificadores de pod persistentes facilitam a correspondência dos volumes existentes com os novos pods que substituem os que falharam.
+
+#### Criando um StatefulSets
+
+Exemplo:
 
 ```
-kubectl rollout undo deployment.v1.apps/<nome_do_deployment>
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+  labels:
+    app: nginx
+spec:
+  ports:
+  - port: 80
+    name: web
+  clusterIP: None
+  selector:
+    app: nginx
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: web
+spec:
+  selector:
+    matchLabels:
+      app: nginx # has to match .spec.template.metadata.labels
+  serviceName: "nginx"
+  replicas: 3 # by default is 1
+  minReadySeconds: 10 # by default is 0
+  template:
+    metadata:
+      labels:
+        app: nginx # has to match .spec.selector.matchLabels
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: nginx
+        image: k8s.gcr.io/nginx-slim:0.8
+        ports:
+        - containerPort: 80
+          name: web
+        volumeMounts:
+        - name: www
+          mountPath: /usr/share/nginx/html
+  volumeClaimTemplates:
+  - metadata:
+      name: www
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "my-storage-class"
+      resources:
+        requests:
+          storage: 1Gi
 ```
 
-* Mostrar detalhes do Deployment
+
+## Limitar Recursos Computacionais
+
+[Referências](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/)
+
+* __Objetivo__
+
+Definir quanto de recurso computacional (CPU e Memória) um POD deveria/pode consumir em meu ambiente.
+
+* __Motivação__
+
+Evitar que um POD consuma todos os recursos computacionais de um Node;
+
+Evitar que devido ao alto consumo de um POD outro seja degradado;
+
+Garantir a correta distribuição de carga entres os Nodes;
+
+
+* Exemplo:
+
+O pod a seguir tem dois contêineres. Ambos os contêineres são definidos com uma solicitação de 0,25 CPU e 64MiB (2 26 bytes) de memória. Cada contêiner tem um limite de 0,5 CPU e 128MiB de memória. Você pode dizer que o Pod tem uma solicitação de 0,5 CPU e 128 MiB de memória e um limite de 1 CPU e 256MiB de memória.
 
 ```
-kubectl describe deployment nginx-deployment
+apiVersion: v1
+kind: Pod
+metadata:
+  name: frontend
+spec:
+  containers:
+  - name: app
+    image: images.my-company.example/app:v4
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+  - name: log-aggregator
+    image: images.my-company.example/log-aggregator:v6
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
 ```
 
-* Atualizar o Deployment com a versão correta da aplicação
 
-```
-kubectl set image deployment/nginx-deployment nginx=nginx:1.21 --record
-```
-	
-* Verificar status da atualização
 
-```
-kubectl rollout status deployment/<nome_do_deployment>
-```
-	
-* Exibir historico de deployments
 
-```
-kubectl rollout history deployment/<nome_do_deployment>
-```	
-	
+
 ### Service
 	
 [Referências](https://kubernetes.io/pt-br/docs/tutorials/kubernetes-basics/expose/expose-intro/)
@@ -765,178 +1028,6 @@ Acessar o [Exemplo](https://kubernetes.io/docs/tutorials/stateless-application/g
 * Caso tenha dificuldade ou dívidas, solicite apoio no grupo do Whatsapp.
 * Ao finalizar exercício, enviar um print da tela do aplicativo funcionando.
 
-
-
-## DaemonSet
-
-Um DaemonSet garante que todos (ou alguns) nós executem uma cópia de um pod. À medida que os nós são adicionados ao cluster, os pods são adicionados a eles. À medida que os nós são removidos do cluster, esses pods são coletados como lixo. A exclusão de um DaemonSet limpará os pods que ele criou.
-
-Alguns usos típicos de um DaemonSet são:
-
-executando um daemon de armazenamento de cluster em cada nó
-executando um daemon de coleta de logs em cada nó
-executando um daemon de monitoramento de nó em cada nó
-
-[Referências e saiba mais](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/)
-
-Exemplo:
-```
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: example-daemonset
-  namespace: default
-  labels:
-    app: example-daemonset
-spec:
-  selector:
-    matchLabels:
-      name: example-daemonset
-  template:
-    metadata:
-      labels:
-        name: example-daemonset
-    spec:
-      tolerations:
-      # this toleration is to have the daemonset runnable on master nodes
-      # remove it if your masters can't run pods
-      - key: node-role.kubernetes.io/master
-        effect: NoSchedule
-      containers:
-      - name: example-daemonset
-        image: alpine:latest
-        env:
-        - name: NODE_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.nodeName
-        command:
-        - "bin/sh"
-        - "-c"
-        - "echo 'Hello! I am running on '$NODE_NAME; while true; do sleep 300s ; done;"
-        resources:
-          limits:
-            memory: 200Mi
-          requests:
-            cpu: 100m
-            memory: 200Mi
-      terminationGracePeriodSeconds: 30
-```
-[Fonte](https://github.com/marcel-dempers/docker-development-youtube-series/tree/master/kubernetes/daemonsets)
-
-
-## StateFull Set
-
-Um StatefulSet gerência pods que são baseados em uma especificação de contêiner idêntica. Ao contrário de uma implantação(Deployment), um StatefulSet mantém uma identidade fixa para cada um de seus pods.
-
-Esses pods são criados a partir da mesma especificação, mas não são intercambiáveis: cada um tem um identificador persistente que mantém em qualquer reprogramação.
-
-Se quiser usar volumes de armazenamento para fornecer persistência para sua carga de trabalho, você pode usar um StatefulSet como parte da solução. Embora os pods individuais em um StatefulSet sejam suscetíveis a falhas, os identificadores de pod persistentes facilitam a correspondência dos volumes existentes com os novos pods que substituem os que falharam.
-
-[Referências e saiba mais](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/)
-
-Exemplo:
-
-```
-apiVersion: v1
-kind: Service
-metadata:
-  name: nginx
-  labels:
-    app: nginx
-spec:
-  ports:
-  - port: 80
-    name: web
-  clusterIP: None
-  selector:
-    app: nginx
----
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: web
-spec:
-  selector:
-    matchLabels:
-      app: nginx # has to match .spec.template.metadata.labels
-  serviceName: "nginx"
-  replicas: 3 # by default is 1
-  minReadySeconds: 10 # by default is 0
-  template:
-    metadata:
-      labels:
-        app: nginx # has to match .spec.selector.matchLabels
-    spec:
-      terminationGracePeriodSeconds: 10
-      containers:
-      - name: nginx
-        image: k8s.gcr.io/nginx-slim:0.8
-        ports:
-        - containerPort: 80
-          name: web
-        volumeMounts:
-        - name: www
-          mountPath: /usr/share/nginx/html
-  volumeClaimTemplates:
-  - metadata:
-      name: www
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      storageClassName: "my-storage-class"
-      resources:
-        requests:
-          storage: 1Gi
-```
-
-
-## Limitar Recursos Computacionais
-
-[Referências](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/)
-
-* __Objetivo__
-
-Definir quanto de recurso computacional (CPU e Memória) um POD deveria/pode consumir em meu ambiente.
-
-* __Motivação__
-
-Evitar que um POD consuma todos os recursos computacionais de um Node;
-
-Evitar que devido ao alto consumo de um POD outro seja degradado;
-
-Garantir a correta distribuição de carga entres os Nodes;
-
-
-* Exemplo:
-
-O pod a seguir tem dois contêineres. Ambos os contêineres são definidos com uma solicitação de 0,25 CPU e 64MiB (2 26 bytes) de memória. Cada contêiner tem um limite de 0,5 CPU e 128MiB de memória. Você pode dizer que o Pod tem uma solicitação de 0,5 CPU e 128 MiB de memória e um limite de 1 CPU e 256MiB de memória.
-
-```
-apiVersion: v1
-kind: Pod
-metadata:
-  name: frontend
-spec:
-  containers:
-  - name: app
-    image: images.my-company.example/app:v4
-    resources:
-      requests:
-        memory: "64Mi"
-        cpu: "250m"
-      limits:
-        memory: "128Mi"
-        cpu: "500m"
-  - name: log-aggregator
-    image: images.my-company.example/log-aggregator:v6
-    resources:
-      requests:
-        memory: "64Mi"
-        cpu: "250m"
-      limits:
-        memory: "128Mi"
-        cpu: "500m"
-```
 
 
 
