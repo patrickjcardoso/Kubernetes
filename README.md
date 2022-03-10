@@ -697,8 +697,11 @@ Embora cada Pod tenha um endereço IP único, estes IPs não são expostos exter
 * __LoadBalancer__ - Cria um balanceador de carga externo no provedor de nuvem atual (se suportado) e assinala um endereço IP fixo e externo para o serviço. Superconjunto de NodePort.
 * __ExternalName__ - Expõe o serviço usando um nome arbitrário (especificado através de externalName na especificação spec) retornando um registro de CNAME com o nome. Nenhum proxy é utilizado. Este tipo requer v1.7 ou mais recente de kube-dns.
 
+![image](https://user-images.githubusercontent.com/66180145/157732273-09506310-1005-441d-849b-d6333b1ae1e2.png)
+Fonte: [Medium](https://medium.com/devops-mojo/kubernetes-service-types-overview-introduction-to-k8s-service-types-what-are-types-of-kubernetes-services-ea6db72c3f8c)
 	
 ![image](https://user-images.githubusercontent.com/66180145/151550260-9f6b2264-6701-4b05-a4bd-12a8f6a15d1b.png)
+
 
 * Exemplo de Service NodePort:
 
@@ -747,6 +750,14 @@ O Controllador interno do Kubernetes chega continuamente todos os PODs checando 
 [Exemplo prático](https://theithollow.com/2019/02/04/kubernetes-endpoints/)
 
 
+
+# ATIVIDADE PRÁTICA
+	
+## Exercício prático
+Acessar o [Exemplo](https://kubernetes.io/docs/tutorials/stateless-application/guestbook/) e implementar de forma prática. 
+* Caso tenha dificuldade ou dívidas, solicite apoio no grupo do Whatsapp.
+* Ao finalizar exercício, enviar um print da tela do aplicativo funcionando.
+	
 
 ## Ingress Controller 
 [Referências](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/
@@ -890,7 +901,76 @@ spec:
 
 ```
 
+## O que são configMaps e Secrets?
 
+Secrets e ConfigMaps possuem comportamentos similares, porém com Objetivos diferentes.
+
+* __ConfigMaps:__  Um objeto que contém dados não confidenciais, como arquivos de configuração da aplicação, esses dados podem ser montados em um ou mais __Pods__ como __Arquivo__ ou __Variáveis de ambiente__;
+
+* __Secret:__ Um objeto que contém uma pequena quantidade de dados confidenciais, como uma senha, um token ou uma chave. Essas informações podem ser colocadas em um ou mais __Pods__ como __Arquivo__ ou __Variáveis de ambiente__;Isso evita que deixe dados confidenciais diretamente em sua aplicação;
+
+
+### ConfigMaps
+
+[configMaps](https://kubernetes.io/docs/concepts/configuration/configmap/)
+
+Exemplo:
+
+Fonte: https://github.com/xcad2k/boilerplates/tree/main/kubernetes/templates/cm-and-secrets
+
+* Criar os dois arquivos e aplicar: nginx-http-cm.yaml nginx-http-deploy.yml 
+
+* Acessar o container
+
+```
+kubectl exec -it <nome_do_container> -- /bin/bash
+
+cd /etc/nginx/
+ls
+cat
+cat nginx.conf
+```
+
+* Criar o arquivo do Service tipo NodePort: nginx-http-svc.yml 
+
+Acessar a aplicação
+
+
+#### Secrets
+
+[Secrets](https://kubernetes.io/docs/concepts/configuration/secret/)
+
+Exemplo:
+
+Fonte: https://github.com/xcad2k/boilerplates/tree/main/kubernetes/templates/cm-and-secrets
+
+* Criar os dois arquivos e aplicar: mysql-deploy.yaml e mysql-secret.yml 
+
+* Acessar o container
+
+
+```
+kubectl get secrets
+
+kubectl edit secrets mysql-secret
+
+# Acessar o pod
+kubectl exec -it <nome_do_container> -- /bin/bash
+
+#Conectar ao mySQL
+mysql -p
+
+
+
+```
+
+
+
+## O que é NodeSelector?
+
+[Referências](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/)
+
+Você pode restringir um __Pod__ que ele só possa ser executado em um conjunto específico de Nós. Existem várias maneiras de fazer isso e todas as abordagens recomendadas usam seletores de rótulos para facilitar a seleção. Geralmente, __essas restrições são desnecessárias__, pois o agendador fará automaticamente um posicionamento razoável (por exemplo, espalhar seus pods entre nós para não colocar o pod em um nó com recursos livres insuficientes etc.), mas há __algumas circunstâncias__ em que você pode querer controlar em qual nó o pod é implantado - __por exemplo, para garantir que um pod termine em uma máquina com um SSD conectado__ a ele ou para colocar pods de dois serviços diferentes que se comunicam muito na mesma zona de disponibilidade.
 
 
 
@@ -1020,86 +1100,12 @@ kubectl get cs
 ```
 Muito bem, você acaba de concluir a configuração de um cluster Kubernetes. 
 	
-	
-
-## Exercício prático
-Acessar o [Exemplo](https://kubernetes.io/docs/tutorials/stateless-application/guestbook/) e implementar de forma prática. 
-* Caso tenha dificuldade ou dívidas, solicite apoio no grupo do Whatsapp.
-* Ao finalizar exercício, enviar um print da tela do aplicativo funcionando.
 
 
 
 
-## O que são configMaps e Secrets?
-
-Secrets e ConfigMaps possuem comportamentos similares, porém com Objetivos diferentes.
-
-* __ConfigMaps:__  Um objeto que contém dados não confidenciais, como arquivos de configuração da aplicação, esses dados podem ser montados em um ou mais __Pods__ como __Arquivo__ ou __Variáveis de ambiente__;
-
-* __Secret:__ Um objeto que contém uma pequena quantidade de dados confidenciais, como uma senha, um token ou uma chave. Essas informações podem ser colocadas em um ou mais __Pods__ como __Arquivo__ ou __Variáveis de ambiente__;Isso evita que deixe dados confidenciais diretamente em sua aplicação;
 
 
-### ConfigMaps
-
-[configMaps](https://kubernetes.io/docs/concepts/configuration/configmap/)
-
-Exemplo:
-
-Fonte: https://github.com/xcad2k/boilerplates/tree/main/kubernetes/templates/cm-and-secrets
-
-* Criar os dois arquivos e aplicar: nginx-http-cm.yaml nginx-http-deploy.yml 
-
-* Acessar o container
-
-```
-kubectl exec -it <nome_do_container> -- /bin/bash
-
-cd /etc/nginx/
-ls
-cat
-cat nginx.conf
-```
-
-* Criar o arquivo do Service tipo NodePort: nginx-http-svc.yml 
-
-Acessar a aplicação
-
-
-#### Secrets
-
-[Secrets](https://kubernetes.io/docs/concepts/configuration/secret/)
-
-Exemplo:
-
-Fonte: https://github.com/xcad2k/boilerplates/tree/main/kubernetes/templates/cm-and-secrets
-
-* Criar os dois arquivos e aplicar: mysql-deploy.yaml e mysql-secret.yml 
-
-* Acessar o container
-
-
-```
-kubectl get secrets
-
-kubectl edit secrets mysql-secret
-
-# Acessar o pod
-kubectl exec -it <nome_do_container> -- /bin/bash
-
-#Conectar ao mySQL
-mysql -p
-
-
-
-```
-
-
-
-## O que é NodeSelector?
-
-[Referências](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/)
-
-Você pode restringir um __Pod__ que ele só possa ser executado em um conjunto específico de Nós. Existem várias maneiras de fazer isso e todas as abordagens recomendadas usam seletores de rótulos para facilitar a seleção. Geralmente, __essas restrições são desnecessárias__, pois o agendador fará automaticamente um posicionamento razoável (por exemplo, espalhar seus pods entre nós para não colocar o pod em um nó com recursos livres insuficientes etc.), mas há __algumas circunstâncias__ em que você pode querer controlar em qual nó o pod é implantado - __por exemplo, para garantir que um pod termine em uma máquina com um SSD conectado__ a ele ou para colocar pods de dois serviços diferentes que se comunicam muito na mesma zona de disponibilidade.
 
 
 
