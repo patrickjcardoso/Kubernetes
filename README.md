@@ -3,9 +3,12 @@
 
 ## Sumário
 
-1. [Kubernetes com MINIKUBE (Single Node)](https://github.com/patrickjcardoso/Kubernetes#kubernetes-com-minikube-single-node)
-2. [Kubernetes com KIND]()
-2. [Kubernetes com KUBEADM (Cluster)](https://github.com/patrickjcardoso/Kubernetes#kubernetes-com-kubeadm-cluster)
+1. [Instalar Docker](https://github.com/patrickjcardoso/Kubernetes#instalar-o-docker)
+2. [Instalar Kubectl](https://github.com/patrickjcardoso/Kubernetes#instalar-o-kubectl)
+3. [Kubernetes com MINIKUBE (Single Node)](https://github.com/patrickjcardoso/Kubernetes#kubernetes-com-minikube-single-node)
+5. [Kubernetes com KIND](https://github.com/patrickjcardoso/Kubernetes#kubernetes-com-kind)
+6. [Kubernetes com KUBEADM (Cluster)](https://github.com/patrickjcardoso/Kubernetes#kubernetes-com-kubeadm-cluster)
+7. [Kubernetes](https://github.com/patrickjcardoso/Kubernetes#kubernetes-1)
 
 ### Instalar o Docker
 1º Instalar o docker
@@ -82,7 +85,9 @@ kind create cluster --name o2bacademy --config arquivodeconfiguração.yaml
 
 ## KUBERNETES
 
-### Atividade 01 - Criando meu primeiro cluster
+### Comandos básicos
+
+[K8S Cheatsheet](https://kubernetes.io/pt-br/docs/reference/kubectl/cheatsheet/)
 
 ```
 kubectl cluster-info
@@ -131,12 +136,6 @@ kubectl run meuapache --image=httpd:2.4
 
 ```
 kubectl get pod my-pod -o yaml > my-pod.yaml
-```
-
-* Salva manifesto sem informações específicas do cluster
-
-```
-kubectl get pod my-pod -o yaml --export  > my-pod.yaml
 ```
 
 [Saiba mais sobre manifesto](https://medium.com/@sujithar37/understanding-the-kubernetes-manifest-97f44acc2cb9)
@@ -357,9 +356,12 @@ Você descreve um estado desejado em um Deployment e a Deployment Controlador al
 Você pode definir implantações para criar novos ReplicaSets ou remover implantações existentes e adotar todos os seus recursos com novas implantações.
 
 * Vantagens:
-Escalabilidade: com um Deployment, pode-se especificar o número de réplicas desejado e o Deployment vai criar ou remover Pods até alcançar o número desejado.
-Atualizações: é possível alterar a imagem de um container para uma nova versão e o Deployment vai gradualmente substituir os containers para a nova versão (evita downtime).
-Self-healing: se um dos Pods for acidentalmente destruído, o Deployment vai imediatamente iniciar um novo Pod para substituí-lo.
+
+__Escalabilidade:__ com um Deployment, pode-se especificar o número de réplicas desejado e o Deployment vai criar ou remover Pods até alcançar o número desejado.
+
+__Atualizações:__ é possível alterar a imagem de um container para uma nova versão e o Deployment vai gradualmente substituir os containers para a nova versão (evita downtime).
+
+__Self-healing:__ se um dos Pods for acidentalmente destruído, o Deployment vai imediatamente iniciar um novo Pod para substituí-lo.
 
 ![image](https://user-images.githubusercontent.com/66180145/156232007-72d8b9e8-427b-4bec-911f-2ed8f20b55c3.png)
 Fonte: https://www.bluematador.com/blog/kubernetes-deployments-rolling-update-configuration
@@ -369,7 +371,6 @@ Fonte: https://www.bluematador.com/blog/kubernetes-deployments-rolling-update-co
 ```
 kubectl create deployment http-deployment --image=nginx
 ```
-
 
 * Exemplo, abordagem declarativa:
 	
@@ -489,6 +490,8 @@ kubectl rollout undo deployment/nginx-deployment
 
 #### ATIVIDADE PRÁTICA 01 - Implantando aplicação no K8S
 
+__Etapa01__
+
 Você está responsável por fazer a implantação de uma aplicação que vai utilizar a imagem gcr.io/google_samples/echo-go:1.0
 
 1. Criar Deployment da aplicação utilizando um arquivo de manifesto e com 3 réplicas.
@@ -501,15 +504,24 @@ Você está responsável por fazer a implantação de uma aplicação que vai ut
 kubectl scale --replicas 5 deployment <nome_do_deployment>
 ```
 
+__Etapa02__
+
 A equipe de desenvolvimento enviou para você uma nova imagem da aplicação chamada: gcr.io/google_samples/echo-go faça a atualização para a nova versão.
 
 * Lembre-se de verificar se a atualização ocorreu normalmente.
+
+__Etapa03__
 
 Após um tempo, a equipe te enviou novamente uma nova versão que é: gcr.io/google_samples/echo-go:2.0 faça a atualização para a nova versão.
 
 * Lembre-se de verificar se a atualização ocorreu normalmente.
 
+__Etapa04__
+
 A equipe de desenvolvimento constatou alguns problemas e solicitou que você faça um rollback para a versão 1.0, faça a reversão e verifique se está tudo correto.
+
+
+__Entrega:__ Enviar para patrick.cardoso@o2b.com.br, assunto: Atividade prática K8S 01, os print de conclusão de cada etapa, junto com o arquivo de manifesto.
 
 
 ## DaemonSet
@@ -756,14 +768,18 @@ O Controllador interno do Kubernetes chega continuamente todos os PODs checando 
 
 
 
-# ATIVIDADE PRÁTICA
+## ATIVIDADE PRÁTICA 02
 	
 ## Exercício prático
-Acessar o [Exemplo](https://kubernetes.io/docs/tutorials/stateless-application/guestbook/) e implementar de forma prática. 
+Acessar o [Exemplo](https://kubernetes.io/docs/tutorials/stateless-application/guestbook/) e implementar de forma prática. Escolha qual é a melhor estratégia para implantar essa aplicação.
 * Caso tenha dificuldade ou dívidas, solicite apoio no grupo do Whatsapp.
 * Ao finalizar exercício, enviar um print da tela do aplicativo funcionando.
 	
+__Entrega:__ Enviar para patrick.cardoso@o2b.com.br, assunto: Atividade prática K8S 02, os print de conclusão da implantação.
+	
 
+	
+	
 ## Ingress Controller 
 [Referências](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/
 )
@@ -964,19 +980,13 @@ kubectl exec -it <nome_do_container> -- /bin/bash
 
 #Conectar ao mySQL
 mysql -p
-
-
-
 ```
-
-
 
 ## O que é NodeSelector?
 
 [Referências](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/)
 
 Você pode restringir um __Pod__ que ele só possa ser executado em um conjunto específico de Nós. Existem várias maneiras de fazer isso e todas as abordagens recomendadas usam seletores de rótulos para facilitar a seleção. Geralmente, __essas restrições são desnecessárias__, pois o agendador fará automaticamente um posicionamento razoável (por exemplo, espalhar seus pods entre nós para não colocar o pod em um nó com recursos livres insuficientes etc.), mas há __algumas circunstâncias__ em que você pode querer controlar em qual nó o pod é implantado - __por exemplo, para garantir que um pod termine em uma máquina com um SSD conectado__ a ele ou para colocar pods de dois serviços diferentes que se comunicam muito na mesma zona de disponibilidade.
-
 
 
 # KUBERNETES COM KUBEADM (Cluster)
