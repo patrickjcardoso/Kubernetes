@@ -459,6 +459,11 @@ A implantação também garante que apenas um determinado número de pods seja c
 	
 #### Revertendo uma implantação
 
+Enviar a atividade para: patrick.cardoso@o2b.com.br
+
+A cada etapa tirar um print da saída do comando: kubectl get all
+* Caso seu deployment esteja em uma namespace, lembre de ajustar o comando acima.
+
 Às vezes, você pode querer reverter uma implantação; por exemplo, quando a implantação não é estável, como loop de falha. Por padrão, todo o histórico de distribuição da implantação é mantido no sistema para que você possa reverter a qualquer momento (você pode alterar isso modificando o limite do histórico de revisões).
 
 1. Suponha que você tenha cometido um erro de digitação ao atualizar a implantação, colocando o nome da imagem como nginx:1.161 em vez de nginx:1.16.1.
@@ -482,7 +487,7 @@ kubectl rollout history deployment/nginx-deployment --revision=2
 kubectl rollout undo deployment/nginx-deployment
 ```
 
-#### ATIVIDADE PRÁTICA - 
+#### ATIVIDADE PRÁTICA 01 - Implantando aplicação no K8S
 
 Você está responsável por fazer a implantação de uma aplicação que vai utilizar a imagem gcr.io/google_samples/echo-go:1.0
 
