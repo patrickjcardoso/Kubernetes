@@ -814,7 +814,7 @@ spec:
     spec:
       containers:
       - name: simple-api
-        image: gustavoleitao/simple-api:1.0.0
+        image: gustavoleitao/simple-api:1.0.4
         ports:
         - containerPort: 3000
         readinessProbe:
