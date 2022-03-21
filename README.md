@@ -1008,7 +1008,7 @@ Nesse laboratório vamos criar um nó master e dois worker node.
 |----|----|----|----|----|
 |Master|192.168.1.100|Ubuntu 18.04|2G|2|
 |Worker1|192.168.1.101|Ubuntu 18.04|1G|1|
-|Worker2|192.168.1.101|Ubuntu 18.04|1G|1|
+|Worker2|192.168.1.102|Ubuntu 18.04|1G|1|
 
 ### Executar no Master e nos Workers
 
