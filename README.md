@@ -1068,6 +1068,7 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io
 ##### Instalar componentes do Kubernetes 
 ```
 apt update && apt install -y kubeadm=1.20.0-00 kubelet=1.20.0-00 kubectl=1.20.0-00
+sudo apt-mark hold kubeadm kubelet kubectl
 ```
 
 
