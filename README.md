@@ -989,96 +989,115 @@ mysql -p
 Você pode restringir um __Pod__ que ele só possa ser executado em um conjunto específico de Nós. Existem várias maneiras de fazer isso e todas as abordagens recomendadas usam seletores de rótulos para facilitar a seleção. Geralmente, __essas restrições são desnecessárias__, pois o agendador fará automaticamente um posicionamento razoável (por exemplo, espalhar seus pods entre nós para não colocar o pod em um nó com recursos livres insuficientes etc.), mas há __algumas circunstâncias__ em que você pode querer controlar em qual nó o pod é implantado - __por exemplo, para garantir que um pod termine em uma máquina com um SSD conectado__ a ele ou para colocar pods de dois serviços diferentes que se comunicam muito na mesma zona de disponibilidade.
 
 
-# KUBERNETES COM KUBEADM (Cluster)
+# Instalação de um cluster Kubernetes com Kubeadm, kubectl e kubelet
 
+Este tutorial é uma apoio no deploy de um cluster kubernetes. Nesse laboratório vamos criar um nó master e dois worker node.
 
-## Instalando um Cluster Kubernetes utilizando o Kubeadm
+## Pré-requisitos
 
-__Seguindo essa documentação/tutorial você conseguirá criar um cluster Kuberntes.__
+Você precisará de três instâncias com as configurações abaixo que podem ser criadas localmente utilizando o Virutalbox/Vmware ou instâncias em um cloud provider (aws, gcp, azure etc) de sua preferência.
 
-* SO:
-
- __Ubuntu 18.04 LTS__ ou __Ubuntu 20.04 LTS__.
-
-Nesse laboratório vamos criar um nó master e dois worker node.
-
-### Definições:
+### Configurações mínimas das instâncias.
 
 |Função|IP|OS|RAM|CPU|
 |----|----|----|----|----|
-|Master|192.168.1.100|Ubuntu 18.04|2G|2|
-|Worker1|192.168.1.101|Ubuntu 18.04|1G|1|
-|Worker2|192.168.1.102|Ubuntu 18.04|1G|1|
+|Master|192.168.1.100|Ubuntu 18.04/20.04|4G|4|
+|Worker1|192.168.1.101|Ubuntu 18.04/20.04|2G|2|
+|Worker2|192.168.1.102|Ubuntu 18.04/20.04|2G|2|
 
-### Executar no Master e nos Workers
+Os endereços de Ips são somente uma sugestão. 
 
-##### Faça login com o usuário `root` 
+
+### Pré-requisitos de Softwares:
+
+* Docker instalados em todos os nós do cluster
+
+[Documentação Oficial](https://docs.docker.com/engine/install/)
+
+
+## Executar no Master e nos Workers
+
+* Os comandos abaixo devem ser executados em todos os nós do cluster. Faça login com o usuário `root` 
 
 ```
 sudo su -
 ```
 
-Execute todos os comandos como usuário root, a menos que especificado de outra forma
-
-##### Desabilitar Firewall
+#### Desabilitar Firewall
 
 ```
 ufw disable
 ```
 
-##### Desabilitar swap
+#### Desabilitar swap
 ```
 swapoff -a; sed -i '/swap/d' /etc/fstab
 ```
-
-##### Atualizar as configurações do sysctl para a rede Kubernetes
+#### cgroup driver usar systemd
 ```
-cat >>/etc/sysctl.d/kubernetes.conf<<EOF
+cat > /etc/docker/daemon.json <<EOF
+{
+  "exec-opts": ["native.cgroupdriver=systemd"],
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "100m"
+  },
+  "storage-driver": "overlay2"
+}
+EOF
+
+systemctl restart docker
+systemctl enable docker
+```
+
+#### Atualizar as configurações do sysctl para a rede Kubernetes
+```
+cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
+br_netfilter
+EOF
+
+cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
 net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-iptables = 1
 EOF
 sysctl --system
 ```
 
-##### Instalar docker engine
-Alternativamente, você pode fazer a instalação através do script de instalação [Documentação Oficial](https://docs.docker.com/engine/install/ubuntu/)
-```
-sudo apt-get update && sudo apt-get install \
-    ca-certificates \
-    curl \
-    gnupg \
-    lsb-release
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
-  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-sudo apt-get update
-sudo apt-get install docker-ce docker-ce-cli containerd.io
-```
-	
-
 ### Kubernetes Setup
 ##### Adicionar repositorio ao apt Apt
 ```
-
   curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
   echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" > /etc/apt/sources.list.d/kubernetes.list
 
 ```
 ##### Instalar componentes do Kubernetes 
 ```
-apt update && apt install -y kubeadm=1.20.0-00 kubelet=1.20.0-00 kubectl=1.20.0-00
+apt update && apt install -y kubeadm=1.21.0-00 kubelet=1.21.0-00 kubectl=1.21.0-00
 sudo apt-mark hold kubeadm kubelet kubectl
 ```
 
 
-## Somente no MASTER
-##### Inicializar Cluster Kubernetes 
-Atualize o comando abaixo com o endereço IP do Master
+## Atenção! Somente no nó MASTER
+
+#### Inicializar Cluster Kubernetes
+
+Antes de executar o comando abaixo você precisa alterar:
+
+--apiserver-advertise-address=<ip_do_no_master>
+
 ```
-kubeadm init --apiserver-advertise-address=172.16.16.100 --pod-network-cidr=192.168.0.0/16  --ignore-preflight-errors=all
+kubeadm init --apiserver-advertise-address=192.168.1.100 --pod-network-cidr=172.16.0.0/16  --ignore-preflight-errors=all
 ```
-##### Deploy network
+
+#### Para poder executar comandos kubectl como usuário não root
+Para poder executar comandos junto ao cluster Kubernetes 
+```
+exit
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+```
+#### Configurar Pod Network/Deploy network
 [Saiba mais](https://kubernetes.io/pt-br/docs/concepts/cluster-administration/networking/#:~:text=Kubernetes%20%C3%A9%20basicamente%20o%20compartilhamento,tentem%20utilizar%20as%20mesmas%20portas.)
 
 Escolha somente um tipo abaixo:
@@ -1095,36 +1114,25 @@ kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Doc
 kubectl --kubeconfig=/etc/kubernetes/admin.conf create -f https://docs.projectcalico.org/v3.14/manifests/calico.yaml
 ```
 
-##### Consultar comando para adicionar os Workers ao Cluster 
-```
-kubeadm token create --print-join-command
-```
-
-##### Para poder executar comandos kubectl como usuário não root
-Para poder executar comandos junto ao cluster Kubernetes 
-```
-mkdir -p $HOME/.kube
-sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-sudo chown $(id -u):$(id -g) $HOME/.kube/config
-```
-
-## Workers
-##### Adicionar ao Cluster
-Use o comando `kubeadm token create --print-join-command` para gerar o token de acesso ao cluster.
-
-## Verificar o Cluster (no Master)
-
+Execute o comando abaixo para verificar o status do nó master
 ```
 kubectl get nodes
 ```
 
+#### Habilitar o autocompletion para o Kubectl
 ```
-kubectl get cs
+echo 'source <(kubectl completion bash)' >>~/.bashrc
 ```
-Muito bem, você acaba de concluir a configuração de um cluster Kubernetes. 
-	
 
 
+## Adicionar os Workers ao cluster
+
+Executar o comando para adicionar os worker ao cluster!
+
+#### Consultar comando para adicionar os Workers ao Cluster 
+```
+kubeadm token create --print-join-command
+```
 
 
 
