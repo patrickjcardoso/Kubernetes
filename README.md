@@ -1,16 +1,49 @@
 # Kubernetes
 
+Kubernetes é um orquestrador de código aberto para implantação de aplicações conteinerizadas. Foi originalmente desenvolvido pela Goolge, inspirado em uma década de experiência com a implantação de sistemas escaláveis e confiáveis em contêineres por meio de APIs orientada a aplicações. (BURNS; BEDA; HIGHTOWER, 2019)
+
+## Dica de Livros:
+
+[Kubernetes Básico](https://novatec.com.br/livros/kubernetes-basico/)
+
+[Kubernetes: Up and Running: Dive into the Future of Infrastructure](https://www.amazon.com.br/dp/B07YP1XSZ9/ref=dp-kindle-redirect?_encoding=UTF8&btkr=1)
+
+## Certificação
+
+As certificações Kubernetes são valorizadas pelo mercado. 
+
+* [CKA - Certified Kubernetes Administrator](https://training.linuxfoundation.org/certification/certified-kubernetes-administrator-cka/)
+* [CKAD - Certified Kubernetes Application Developer](https://training.linuxfoundation.org/certification/certified-kubernetes-application-developer-ckad/)
+* [CKS - Certified Kubernetes Security Specialist](https://training.linuxfoundation.org/certification/certified-kubernetes-security-specialist/)
+
+## Kubernetes
+
+### Componentes do Kubernetes
+
+
+Um cluster Kubernetes consiste em um conjunto de servidores de processamento, chamados nós, que executam aplicações containerizadas. Todo cluster possui ao menos um servidor de processamento (worker node).
+
+
+![image](https://user-images.githubusercontent.com/66180145/168141900-ebc113cd-cedb-41eb-b0aa-78f678da3b8d.png)
+
+* [Documentação sobre os componentes](https://kubernetes.io/pt-br/docs/concepts/overview/components/)
+
+
+![image](https://user-images.githubusercontent.com/66180145/168142905-e0b89cbf-6bde-4909-97fb-479fe747dc13.png)
 
 ## Sumário
 
 1. [Instalar Docker](https://github.com/patrickjcardoso/Kubernetes#instalar-o-docker)
 2. [Instalar Kubectl](https://github.com/patrickjcardoso/Kubernetes#instalar-o-kubectl)
-3. [Kubernetes com MINIKUBE (Single Node)](https://github.com/patrickjcardoso/Kubernetes#kubernetes-com-minikube-single-node)
+3. [Kubernetes com MINIKUBE](https://github.com/patrickjcardoso/Kubernetes#kubernetes-com-minikube-single-node)
 5. [Kubernetes com KIND](https://github.com/patrickjcardoso/Kubernetes#kubernetes-com-kind)
 6. [Kubernetes com KUBEADM (Cluster)](https://github.com/patrickjcardoso/Kubernetes#kubernetes-com-kubeadm-cluster)
 7. [Kubernetes](https://github.com/patrickjcardoso/Kubernetes#kubernetes-1)
 
 ### Instalar o Docker
+
+[Documentação Oficial](https://docs.docker.com/engine/install/)
+
 1º Instalar o docker
 ```
 curl -fsSL https://get.docker.com -o get-docker.sh
@@ -19,21 +52,24 @@ sudo sh get-docker.sh
 Usar docker sem ser root
 ```
 sudo usermod -aG docker ${USER}
+bash
 ```
+
+* Você pode precisar configurar o autopreenchimento
 
 ### Instalar o Kubectl
 
-[Tutorial Oficial:](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/)
+[Documentação Oficial:](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/)
 
 Autocomplete Kubectl: 
 ```
-kubectl completion bash | sudo tee /etc/bash_completion.d/kubectl > /dev/null
+echo 'source <(kubectl completion bash)' >>~/.bashrc
 ```
 
-## KUBERNETES COM MINIKUBE (Single Node)
+## KUBERNETES COM MINIKUBE
 
 Instalar o MiniKube
-[Tutorial Oficial:](https://minikube.sigs.k8s.io/docs/start/)
+[Documentação Oficial:](https://minikube.sigs.k8s.io/docs/start/)
 
 
 ### MiniKube Comandos básicos
@@ -104,6 +140,23 @@ kubectl get namespaces
 
 kubectl describe pod etcd-minikube -n kube-system
 ```
+
+## Kubectl e as meniras de interação 
+
+Há duas maneiras básicas de interagir com o Kubernetes:
+* Imperativa: através de diversos parâmetros do kubectl
+  * Diz ao K8S o que fazer
+  * Boa para usar quando se está aprendendo, para fazer experimentos interativos ou debugar serviços em produção.
+
+
+* Declarativa: escrevendo manifestos e os usando com o comando kubectl apply.
+  * Diz ao K8s o que você quer
+  * Melhor para implantar serviços de maneira a facilitar a reprodutibilidade.
+  * Recomendada para gerenciar aplicações K8s em produção 
+
+Utilizando os arquivos de manifesto. Arquivos com a extensão yaml ou yml.
+
+
 
 ## Pods
 
@@ -1144,3 +1197,150 @@ kubeadm token create --print-join-command
 
 
 
+
+
+
+# Instalação de um cluster Kubernetes com Kubeadm, kubectl e kubelet
+
+Este tutorial é uma apoio no deploy de um cluster kubernetes. Nesse laboratório vamos criar um nó master e dois worker node.
+
+## Pré-requisitos
+
+Você precisará de três instâncias com as configurações abaixo que podem ser criadas localmente utilizando o Virutalbox/Vmware ou instâncias em um cloud provider (aws, gcp, azure etc) de sua preferência.
+
+### Configurações mínimas das instâncias.
+
+|Função|IP|OS|RAM|CPU|
+|----|----|----|----|----|
+|Master|192.168.1.100|Ubuntu 18.04/20.04|4G|4|
+|Worker1|192.168.1.101|Ubuntu 18.04/20.04|2G|2|
+|Worker2|192.168.1.102|Ubuntu 18.04/20.04|2G|2|
+
+Os endereços de Ips são somente uma sugestão. 
+
+
+### Pré-requisitos de Softwares:
+
+* Docker instalados em todos os nós do cluster
+
+[Documentação Oficial](https://docs.docker.com/engine/install/)
+
+
+## Executar no Master e nos Workers
+
+* Os comandos abaixo devem ser executados em todos os nós do cluster. Faça login com o usuário `root` 
+
+```
+sudo su -
+```
+
+#### Desabilitar Firewall
+
+```
+ufw disable
+```
+
+#### Desabilitar swap
+```
+swapoff -a; sed -i '/swap/d' /etc/fstab
+```
+#### cgroup driver usar systemd
+```
+cat > /etc/docker/daemon.json <<EOF
+{
+  "exec-opts": ["native.cgroupdriver=systemd"],
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "100m"
+  },
+  "storage-driver": "overlay2"
+}
+EOF
+
+systemctl restart docker
+systemctl enable docker
+```
+
+#### Atualizar as configurações do sysctl para a rede Kubernetes
+```
+cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
+br_netfilter
+EOF
+
+cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+EOF
+sysctl --system
+```
+
+### Kubernetes Setup
+##### Adicionar repositorio ao apt Apt
+```
+  curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+  echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" > /etc/apt/sources.list.d/kubernetes.list
+
+```
+##### Instalar componentes do Kubernetes 
+```
+apt update && apt install -y kubeadm=1.21.0-00 kubelet=1.21.0-00 kubectl=1.21.0-00
+sudo apt-mark hold kubeadm kubelet kubectl
+```
+
+
+## Atenção! Somente no nó MASTER
+
+#### Inicializar Cluster Kubernetes
+
+Antes de executar o comando abaixo você precisa alterar:
+
+--apiserver-advertise-address=<ip_do_no_master>
+
+```
+kubeadm init --apiserver-advertise-address=192.168.1.100 --pod-network-cidr=172.16.0.0/16  --ignore-preflight-errors=all
+```
+
+#### Para poder executar comandos kubectl como usuário não root
+Para poder executar comandos junto ao cluster Kubernetes 
+```
+exit
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+```
+#### Configurar Pod Network/Deploy network
+[Saiba mais](https://kubernetes.io/pt-br/docs/concepts/cluster-administration/networking/#:~:text=Kubernetes%20%C3%A9%20basicamente%20o%20compartilhamento,tentem%20utilizar%20as%20mesmas%20portas.)
+
+Escolha somente um tipo abaixo:
+
+* Flannel
+
+```
+kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
+```
+
+* Calico
+
+```
+kubectl --kubeconfig=/etc/kubernetes/admin.conf create -f https://docs.projectcalico.org/v3.14/manifests/calico.yaml
+```
+
+Execute o comando abaixo para verificar o status do nó master
+```
+kubectl get nodes
+```
+
+#### Habilitar o autocompletion para o Kubectl
+```
+echo 'source <(kubectl completion bash)' >>~/.bashrc
+```
+
+
+## Adicionar os Workers ao cluster
+
+Executar o comando para adicionar os worker ao cluster!
+
+#### Consultar comando para adicionar os Workers ao Cluster 
+```
+kubeadm token create --print-join-command
+```
