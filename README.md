@@ -8,6 +8,8 @@ Kubernetes é um orquestrador de código aberto para implantação de aplicaçõ
 
 [Kubernetes: Up and Running: Dive into the Future of Infrastructure](https://www.amazon.com.br/dp/B07YP1XSZ9/ref=dp-kindle-redirect?_encoding=UTF8&btkr=1)
 
+[Livro Descomplicando Kubernetes](https://livro.descomplicandokubernetes.com.br/pt/)
+
 ## Certificação
 
 As certificações Kubernetes são valorizadas pelo mercado. 
@@ -141,7 +143,7 @@ kubectl get namespaces
 kubectl describe pod etcd-minikube -n kube-system
 ```
 
-## Kubectl e as meniras de interação 
+## Kubectl e as maneiras de interação 
 
 Há duas maneiras básicas de interagir com o Kubernetes:
 * Imperativa: através de diversos parâmetros do kubectl
@@ -165,6 +167,9 @@ Utilizando os arquivos de manifesto. Arquivos com a extensão yaml ou yml.
 Os pods são as menores unidades de computação implantáveis que você pode criar e gerenciar no Kubernetes.
 
 Em termos de conceitos do Docker, um Pod é semelhante a um grupo de contêineres do Docker com namespaces compartilhados e volumes de sistema de arquivos compartilhados.
+
+![image](https://user-images.githubusercontent.com/66180145/169307169-6043bd40-4308-4641-8014-e47c3b193346.png)
+
 
 ### Criando meu primeiro Pod
 
@@ -219,6 +224,8 @@ kubectl apply -f <nomedoarquivo.yaml>
 kubectl port-forward pod/meupod 8080:80
 ```
 Cada Pod deve executar uma única instância de um determinado aplicativo. Se você quiser dimensionar seu aplicativo horizontalmente (para fornecer mais recursos gerais executando mais instâncias), use vários pods, um para cada instância. No Kubernetes, isso geralmente é chamado de replicação . Os pods replicados geralmente são criados e gerenciados como um grupo por um recurso de carga de trabalho e seucontrolador.
+
+## Workloads
 
 Você pode usar recursos de carga de trabalho para criar e gerenciar vários pods para você. Um controlador para o recurso lida com a replicação, a distribuição e a correção automática em caso de falha do pod. Por exemplo, se um nó falhar, um controlador perceberá que os pods nesse nó pararam de funcionar e cria um pod substituto. O agendador coloca o Pod substituto em um Node.
 
@@ -401,6 +408,7 @@ Altere o nome ou a versão da image no seu manifesto, aplica as modificações e
 
 Embora você possa criar pods vazios sem problemas, é altamente recomendável garantir que os pods vazios não tenham rótulos que correspondam ao seletor de um de seus ReplicaSets. A razão para isso é porque um ReplicaSet não se limita a possuir Pods especificados por seu modelo - ele pode adquirir outros Pods da maneira especificada nas seções anteriores.
 
+
 ### Deployment
 
 Um Deployment fornece atualizações declarativas para Pods e ReplicaSet.
@@ -487,7 +495,7 @@ kubectl describe deployment http-deployment
 
 Siga as etapas abaixo para atualizar sua implantação:
 
-1. Vamos atualizar os pods nginx para usar a imagem nginx:1.20 em vez da nginx:1.14.2.
+1. Vamos atualizar os pods nginx para usar a imagem nginx:1.16 em vez da nginx:1.14.2.
 
 Você pode fazer isso básicamente de três maneiras:
 
@@ -498,7 +506,7 @@ Altere o arquivo de manifesto e aplique as alterações.
 * De maneira Imperativa:
 
 ```
-kubectl set image deployment/nginx-deployment nginx=nginx:1.20
+kubectl set image deployment/nginx-deployment nginx=nginx:1.16
 ```
 
 * Editar o Deployment diretamente:
@@ -512,11 +520,6 @@ A implantação garante que apenas um determinado número de pods fique inativo 
 A implantação também garante que apenas um determinado número de pods seja criado acima do número desejado de pods. Por padrão, ele garante que no máximo 125% do número desejado de Pods esteja ativo (25% de aumento máximo).
 	
 #### Revertendo uma implantação
-
-Enviar a atividade para: patrick.cardoso@o2b.com.br
-
-A cada etapa tirar um print da saída do comando: kubectl get all
-* Caso seu deployment esteja em uma namespace, lembre de ajustar o comando acima.
 
 Às vezes, você pode querer reverter uma implantação; por exemplo, quando a implantação não é estável, como loop de falha. Por padrão, todo o histórico de distribuição da implantação é mantido no sistema para que você possa reverter a qualquer momento (você pode alterar isso modificando o limite do histórico de revisões).
 
@@ -576,6 +579,117 @@ A equipe de desenvolvimento constatou alguns problemas e solicitou que você fa�
 
 __Entrega:__ Enviar para patrick.cardoso@o2b.com.br, assunto: Atividade prática K8S 01, os print de conclusão de cada etapa, junto com o arquivo de manifesto.
 
+
+# Services
+	
+[Referências](https://kubernetes.io/pt-br/docs/tutorials/kubernetes-basics/expose/expose-intro/)
+	
+Um serviço no Kubernetes é uma abstração que define um conjunto lógico de Pods e uma política pela qual acessá-los.
+O conjunto de Pods selecionados por um Serviço é geralmente determinado por um seletor de rótulos LabelSelector.
+	
+Embora cada Pod tenha um endereço IP único, estes IPs não são expostos externamente ao cluster sem um Serviço. Serviços permitem que suas aplicações recebam tráfego. Serviços podem ser expostos de formas diferentes especificando um tipo type na especificação do serviço ServiceSpec:
+
+* __ClusterIP (padrão)__ - Expõe o serviço sob um endereço IP interno no cluster. Este tipo faz do serviço somente alcançável de dentro do cluster.
+* __NodePort__ - Expõe o serviço sob a mesma porta em cada nó selecionado no cluster usando NAT. Faz o serviço acessível externamente ao cluster usando <NodeIP>:<NodePort>. Superconjunto de ClusterIP.
+* __LoadBalancer__ - Cria um balanceador de carga externo no provedor de nuvem atual (se suportado) e assinala um endereço IP fixo e externo para o serviço. Superconjunto de NodePort.
+* __ExternalName__ - Expõe o serviço usando um nome arbitrário (especificado através de externalName na especificação spec) retornando um registro de CNAME com o nome. Nenhum proxy é utilizado. Este tipo requer v1.7 ou mais recente de kube-dns.
+
+![image](https://user-images.githubusercontent.com/66180145/157732273-09506310-1005-441d-849b-d6333b1ae1e2.png)
+Fonte: [Medium](https://medium.com/devops-mojo/kubernetes-service-types-overview-introduction-to-k8s-service-types-what-are-types-of-kubernetes-services-ea6db72c3f8c)
+	
+![image](https://user-images.githubusercontent.com/66180145/151550260-9f6b2264-6701-4b05-a4bd-12a8f6a15d1b.png)
+
+
+* Exemplo de Service NodePort:
+
+```
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-svc
+spec:
+  type: ?
+  selector:
+    app: ?
+  ports:
+    - protocol: TCP
+      port: ?
+      targetPort: ?
+```
+	
+	
+* Exemplo de Service LoadBalancer:
+
+```
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: mariadb-wp
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306	
+```
+
+### EndPoints
+
+Todo o Service deve possuir endepoints saudáveis para que possa encaminhar o tráfego, sendo esse objetivo denominado EndPoint.
+Um Endpoint nada mais é que uma lista de todos os IPs dos PODs que tem Match no Selector utilizado no Service em questão.
+O Controllador interno do Kubernetes chega continuamente todos os PODs checando pelas LABELS definidas nos SELECTOR e atribui via POST ao EndPoint do Service.
+
+*  Endpoints não necessariamente apontam para um POD, um Sevice sem um SELECTOR pode ter seu Endpoint criado manualmente para apontar para um IP ou DNS qualquer a sua escolha. 
+
+
+[Exemplo prático](https://theithollow.com/2019/02/04/kubernetes-endpoints/)
+
+
+## Outros exemplos
+
+
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alpaca-prod
+  labels:
+    ver: "1"
+    app: alpaca
+    env: prod
+    # namespace: dev
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: alpaca
+  template:
+    metadata:
+      labels:
+    app: alpaca
+        env: prod
+    spec:
+      containers:
+      - name: alpaca
+        image: gcr.io/kuar-demo/kuard-arm64:blue
+        ports:
+        - containerPort: 8080
+```
+
+
+
+
+## ATIVIDADE PRÁTICA 02
+	
+## Exercício prático
+Acessar o [Exemplo](https://kubernetes.io/docs/tutorials/stateless-application/guestbook/) e implementar de forma prática. Escolha qual é a melhor estratégia para implantar essa aplicação.
+* Caso tenha dificuldade ou dívidas, solicite apoio no grupo do Whatsapp.
+* Ao finalizar exercício, enviar um print da tela do aplicativo funcionando.
+	
+__Entrega:__ Enviar para patrick.cardoso@o2b.com.br, assunto: Atividade prática K8S 02, os print de conclusão da implantação.
+	
 
 ## DaemonSet
 
@@ -748,91 +862,6 @@ spec:
         memory: "128Mi"
         cpu: "500m"
 ```
-
-
-
-
-
-### Service
-	
-[Referências](https://kubernetes.io/pt-br/docs/tutorials/kubernetes-basics/expose/expose-intro/)
-	
-Um serviço no Kubernetes é uma abstração que define um conjunto lógico de Pods e uma política pela qual acessá-los.
-O conjunto de Pods selecionados por um Serviço é geralmente determinado por um seletor de rótulos LabelSelector.
-	
-Embora cada Pod tenha um endereço IP único, estes IPs não são expostos externamente ao cluster sem um Serviço. Serviços permitem que suas aplicações recebam tráfego. Serviços podem ser expostos de formas diferentes especificando um tipo type na especificação do serviço ServiceSpec:
-
-* __ClusterIP (padrão)__ - Expõe o serviço sob um endereço IP interno no cluster. Este tipo faz do serviço somente alcançável de dentro do cluster.
-* __NodePort__ - Expõe o serviço sob a mesma porta em cada nó selecionado no cluster usando NAT. Faz o serviço acessível externamente ao cluster usando <NodeIP>:<NodePort>. Superconjunto de ClusterIP.
-* __LoadBalancer__ - Cria um balanceador de carga externo no provedor de nuvem atual (se suportado) e assinala um endereço IP fixo e externo para o serviço. Superconjunto de NodePort.
-* __ExternalName__ - Expõe o serviço usando um nome arbitrário (especificado através de externalName na especificação spec) retornando um registro de CNAME com o nome. Nenhum proxy é utilizado. Este tipo requer v1.7 ou mais recente de kube-dns.
-
-![image](https://user-images.githubusercontent.com/66180145/157732273-09506310-1005-441d-849b-d6333b1ae1e2.png)
-Fonte: [Medium](https://medium.com/devops-mojo/kubernetes-service-types-overview-introduction-to-k8s-service-types-what-are-types-of-kubernetes-services-ea6db72c3f8c)
-	
-![image](https://user-images.githubusercontent.com/66180145/151550260-9f6b2264-6701-4b05-a4bd-12a8f6a15d1b.png)
-
-
-* Exemplo de Service NodePort:
-
-```
-apiVersion: v1
-kind: Service
-metadata:
-  name: nginx-svc
-spec:
-  type: ?
-  selector:
-    app: ?
-  ports:
-    - protocol: TCP
-      port: ?
-      targetPort: ?
-```
-	
-	
-* Exemplo de Service LoadBalancer:
-
-```
-apiVersion: v1
-kind: Service
-metadata:
-  name: mariadb-service
-spec:
-  type: LoadBalancer
-  selector:
-    app: mariadb-wp
-  ports:
-    - protocol: TCP
-      port: 3306
-      targetPort: 3306	
-```
-
-### EndPoints
-
-Todo o Service deve possuir endepoints saudáveis para que possa encaminhar o tráfego, sendo esse objetivo denominado EndPoint.
-Um Endpoint nada mais é que uma lista de todos os IPs dos PODs que tem Match no Selector utilizado no Service em questão.
-O Controllador interno do Kubernetes chega continuamente todos os PODs checando pelas LABELS definidas nos SELECTOR e atribui via POST ao EndPoint do Service.
-
-*  Endpoints não necessariamente apontam para um POD, um Sevice sem um SELECTOR pode ter seu Endpoint criado manualmente para apontar para um IP ou DNS qualquer a sua escolha. 
-
-
-[Exemplo prático](https://theithollow.com/2019/02/04/kubernetes-endpoints/)
-
-
-
-## ATIVIDADE PRÁTICA 02
-	
-## Exercício prático
-Acessar o [Exemplo](https://kubernetes.io/docs/tutorials/stateless-application/guestbook/) e implementar de forma prática. Escolha qual é a melhor estratégia para implantar essa aplicação.
-* Caso tenha dificuldade ou dívidas, solicite apoio no grupo do Whatsapp.
-* Ao finalizar exercício, enviar um print da tela do aplicativo funcionando.
-	
-__Entrega:__ Enviar para patrick.cardoso@o2b.com.br, assunto: Atividade prática K8S 02, os print de conclusão da implantação.
-	
-
-	
-	
 ## Ingress Controller 
 [Referências](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/
 )
@@ -975,13 +1004,14 @@ spec:
 
 ```
 
+
 ## O que são configMaps e Secrets?
 
 Secrets e ConfigMaps possuem comportamentos similares, porém com Objetivos diferentes.
 
 * __ConfigMaps:__  Um objeto que contém dados não confidenciais, como arquivos de configuração da aplicação, esses dados podem ser montados em um ou mais __Pods__ como __Arquivo__ ou __Variáveis de ambiente__;
 
-* __Secret:__ Um objeto que contém uma pequena quantidade de dados confidenciais, como uma senha, um token ou uma chave. Essas informações podem ser colocadas em um ou mais __Pods__ como __Arquivo__ ou __Variáveis de ambiente__;Isso evita que deixe dados confidenciais diretamente em sua aplicação;
+* __Secret:__ Um objeto que contém uma pequena quantidade de dados confidenciais, como uma senha, um token ou uma chave. Essas informações podem ser colocadas em um ou mais __Pods__ como __Arquivo__ ou __Variáveis de ambiente__; Isso evita que deixe dados confidenciais diretamente em sua aplicação;
 
 
 ### ConfigMaps
@@ -1040,164 +1070,6 @@ mysql -p
 [Referências](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/)
 
 Você pode restringir um __Pod__ que ele só possa ser executado em um conjunto específico de Nós. Existem várias maneiras de fazer isso e todas as abordagens recomendadas usam seletores de rótulos para facilitar a seleção. Geralmente, __essas restrições são desnecessárias__, pois o agendador fará automaticamente um posicionamento razoável (por exemplo, espalhar seus pods entre nós para não colocar o pod em um nó com recursos livres insuficientes etc.), mas há __algumas circunstâncias__ em que você pode querer controlar em qual nó o pod é implantado - __por exemplo, para garantir que um pod termine em uma máquina com um SSD conectado__ a ele ou para colocar pods de dois serviços diferentes que se comunicam muito na mesma zona de disponibilidade.
-
-
-# Instalação de um cluster Kubernetes com Kubeadm, kubectl e kubelet
-
-Este tutorial é uma apoio no deploy de um cluster kubernetes. Nesse laboratório vamos criar um nó master e dois worker node.
-
-## Pré-requisitos
-
-Você precisará de três instâncias com as configurações abaixo que podem ser criadas localmente utilizando o Virutalbox/Vmware ou instâncias em um cloud provider (aws, gcp, azure etc) de sua preferência.
-
-### Configurações mínimas das instâncias.
-
-|Função|IP|OS|RAM|CPU|
-|----|----|----|----|----|
-|Master|192.168.1.100|Ubuntu 18.04/20.04|4G|4|
-|Worker1|192.168.1.101|Ubuntu 18.04/20.04|2G|2|
-|Worker2|192.168.1.102|Ubuntu 18.04/20.04|2G|2|
-
-Os endereços de Ips são somente uma sugestão. 
-
-
-### Pré-requisitos de Softwares:
-
-* Docker instalados em todos os nós do cluster
-
-[Documentação Oficial](https://docs.docker.com/engine/install/)
-
-
-## Executar no Master e nos Workers
-
-* Os comandos abaixo devem ser executados em todos os nós do cluster. Faça login com o usuário `root` 
-
-```
-sudo su -
-```
-
-#### Desabilitar Firewall
-
-```
-ufw disable
-```
-
-#### Desabilitar swap
-```
-swapoff -a; sed -i '/swap/d' /etc/fstab
-```
-#### cgroup driver usar systemd
-```
-cat > /etc/docker/daemon.json <<EOF
-{
-  "exec-opts": ["native.cgroupdriver=systemd"],
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "100m"
-  },
-  "storage-driver": "overlay2"
-}
-EOF
-
-systemctl restart docker
-systemctl enable docker
-```
-
-#### Atualizar as configurações do sysctl para a rede Kubernetes
-```
-cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
-br_netfilter
-EOF
-
-cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
-net.bridge.bridge-nf-call-ip6tables = 1
-net.bridge.bridge-nf-call-iptables = 1
-EOF
-sysctl --system
-```
-
-### Kubernetes Setup
-##### Adicionar repositorio ao apt Apt
-```
-  curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-  echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" > /etc/apt/sources.list.d/kubernetes.list
-
-```
-##### Instalar componentes do Kubernetes 
-```
-apt update && apt install -y kubeadm=1.21.0-00 kubelet=1.21.0-00 kubectl=1.21.0-00
-sudo apt-mark hold kubeadm kubelet kubectl
-```
-
-
-## Atenção! Somente no nó MASTER
-
-#### Inicializar Cluster Kubernetes
-
-Antes de executar o comando abaixo você precisa alterar:
-
---apiserver-advertise-address=<ip_do_no_master>
-
-```
-kubeadm init --apiserver-advertise-address=192.168.1.100 --pod-network-cidr=172.16.0.0/16  --ignore-preflight-errors=all
-```
-
-#### Para poder executar comandos kubectl como usuário não root
-Para poder executar comandos junto ao cluster Kubernetes 
-```
-exit
-mkdir -p $HOME/.kube
-sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-sudo chown $(id -u):$(id -g) $HOME/.kube/config
-```
-#### Configurar Pod Network/Deploy network
-[Saiba mais](https://kubernetes.io/pt-br/docs/concepts/cluster-administration/networking/#:~:text=Kubernetes%20%C3%A9%20basicamente%20o%20compartilhamento,tentem%20utilizar%20as%20mesmas%20portas.)
-
-Escolha somente um tipo abaixo:
-
-* Flannel
-
-```
-kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
-```
-
-* Calico
-
-```
-kubectl --kubeconfig=/etc/kubernetes/admin.conf create -f https://docs.projectcalico.org/v3.14/manifests/calico.yaml
-```
-
-Execute o comando abaixo para verificar o status do nó master
-```
-kubectl get nodes
-```
-
-#### Habilitar o autocompletion para o Kubectl
-```
-echo 'source <(kubectl completion bash)' >>~/.bashrc
-```
-
-
-## Adicionar os Workers ao cluster
-
-Executar o comando para adicionar os worker ao cluster!
-
-#### Consultar comando para adicionar os Workers ao Cluster 
-```
-kubeadm token create --print-join-command
-```
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 # Instalação de um cluster Kubernetes com Kubeadm, kubectl e kubelet
