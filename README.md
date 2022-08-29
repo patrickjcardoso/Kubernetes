@@ -33,14 +33,6 @@ Um cluster Kubernetes consiste em um conjunto de servidores de processamento, ch
 
 ![image](https://user-images.githubusercontent.com/66180145/168142905-e0b89cbf-6bde-4909-97fb-479fe747dc13.png)
 
-## Sumário
-
-1. [Instalar Docker](https://github.com/patrickjcardoso/Kubernetes#instalar-o-docker)
-2. [Instalar Kubectl](https://github.com/patrickjcardoso/Kubernetes#instalar-o-kubectl)
-3. [Kubernetes com MINIKUBE](https://github.com/patrickjcardoso/Kubernetes#kubernetes-com-minikube-single-node)
-5. [Kubernetes com KIND](https://github.com/patrickjcardoso/Kubernetes#kubernetes-com-kind)
-6. [Kubernetes com KUBEADM (Cluster)](https://github.com/patrickjcardoso/Kubernetes#kubernetes-com-kubeadm-cluster)
-7. [Kubernetes](https://github.com/patrickjcardoso/Kubernetes#kubernetes-1)
 
 ### Instalar o Docker
 
@@ -121,11 +113,41 @@ kind create cluster --name o2bacademy
 kind create cluster --name o2bacademy --config arquivodeconfiguração.yaml
 
 
-## KUBERNETES
+# KUBERNETES
 
 ### Comandos básicos
 
 [K8S Cheatsheet](https://kubernetes.io/pt-br/docs/reference/kubectl/cheatsheet/)
+
+## Estrutura dos Comandos
+
+Para trabalhar com o Kubernetes, utilizamos o binário do [kubectl](https://kubectl.docs.kubernetes.io/)
+
+> `kubectl` é uma sigla para Kubernetes Control, muitas das vezes podemos ouvir seu nome pronunciado como "Kube C T L", "Kube Control" e "Kube Cuttle/Cuddle", esse ultimo surgiu como um apelido, devido ao seu "Mascote" ser o cuttlefish (Em português Choco, sibas ou sépia) que é uma espécie de molusco parecido com o polvo
+
+Alguns dos comandos do `kubectl` são similares aos comandos do Docker, como por exemplo o comando `kubectl get nodes` para listar os nós do cluster
+```bash
+$ kubectl get nodes
+
+NAME       STATUS   ROLES                  AGE   VERSION
+minikube   Ready    control-plane,master   13m   v1.22.1
+```
+
+Os comandos do `kubectl` seguem a seguinte semântica:
+```bash
+kubectl + VERBO + recurso + OPÇÕES
+```
+
+Alguns exemplos de verbos:
+```bash
+get, list, describe, create, update, patch, delete ...
+```
+
+Alguns exemplos de recursos:
+```bash
+nodes, pods, namespaces, services, deployment, replicaset, pv(persistent volume), pvc(persistent volume claim) ...
+```
+> No Kubernetes podemos utilizar o termo `all` como recurso para trabalhar com todos os recursos.
 
 ```
 kubectl cluster-info
@@ -225,15 +247,7 @@ kubectl port-forward pod/meupod 8080:80
 ```
 Cada Pod deve executar uma única instância de um determinado aplicativo. Se você quiser dimensionar seu aplicativo horizontalmente (para fornecer mais recursos gerais executando mais instâncias), use vários pods, um para cada instância. No Kubernetes, isso geralmente é chamado de replicação . Os pods replicados geralmente são criados e gerenciados como um grupo por um recurso de carga de trabalho e seucontrolador.
 
-## Workloads
-
-Você pode usar recursos de carga de trabalho para criar e gerenciar vários pods para você. Um controlador para o recurso lida com a replicação, a distribuição e a correção automática em caso de falha do pod. Por exemplo, se um nó falhar, um controlador perceberá que os pods nesse nó pararam de funcionar e cria um pod substituto. O agendador coloca o Pod substituto em um Node.
-
-Veja alguns exemplos de recursos de carga de trabalho que gerenciam um ou mais pods:
-
-* Deployment
-* StatefulSet
-* DaemonSet
+[Exemplo pod com 2 containers](https://kubernetes.io/docs/tasks/access-application-cluster/communicate-containers-same-pod-shared-volume/)
 
 
 ## Namespaces
@@ -321,6 +335,16 @@ kubectl get pods -l 'environment in (production),tier in (frontend)'
 kubectl label deployment nginx-deployment tier=dev
 ```
 
+## Workloads
+
+Você pode usar recursos de carga de trabalho para criar e gerenciar vários pods para você. Um controlador para o recurso lida com a replicação, a distribuição e a correção automática em caso de falha do pod. Por exemplo, se um nó falhar, um controlador perceberá que os pods nesse nó pararam de funcionar e cria um pod substituto. O agendador coloca o Pod substituto em um Node.
+
+Veja alguns exemplos de recursos de carga de trabalho que gerenciam um ou mais pods:
+
+* Deployment
+* StatefulSet
+* DaemonSet
+
 ## Workload Resources - Recursos de Carga de Trabalho 
 
 Você pode usar recursos de carga de trabalho que gerenciam um conjunto de pods em seu nome (Labels e Selectors). Esses recursos configuram controladores que garantem que o número certo do tipo certo de pod esteja em execução, para corresponder ao estado que você especificou.
@@ -358,7 +382,7 @@ spec:
     spec:
       containers:
       - name: php-redis
-        image: gcr.io/google_samples/hello-frontend:1.0
+        image: gcr.io/google_samples/gb-frontend:v3
 ```
 	
 *Criar ReplicaSet
@@ -399,9 +423,9 @@ kubectl delete rs frontend
 kubectl delete pod,rs --all
 ```
 
-1. Exercicio Versionamento:
+1. **Exercicio Versionamento:**
 
-Altere o nome ou a versão da image no seu manifesto, aplica as modificações e após isso verifique se os pods foram atualizados.
+Altere o nome ou a versão da image no seu manifesto, aplique as modificações e após isso verifique se os pods foram atualizados para a nova imagem.
  
 
 * Outras considerações:
@@ -463,9 +487,9 @@ spec:
 * Listar Pods, ReplicaSet e Deployments
 
 ```
-kubectl get pods
-kubectl get rs
 kubectl get deployments ou kubectl get deploy
+kubectl get rs
+kubectl get pods
 kubectl get pods --show-labels
 ```
 * Verificar o Status da implatanção:
@@ -473,16 +497,10 @@ kubectl get pods --show-labels
 kubectl rollout status deployment/nginx-deployment
 ```
 
-* Aumentar a quantidade de réplicas 
+* Aumentar/diminuir a quantidade de réplicas 
 
 ```
 kubectl scale --replicas 3 deployment http-deployment
-```
-	
-* Diminuir a quantidade de réplicas 
-
-```
-kubectl scale --replicas 2 deployment http-deployment
 ```
 	
 * Mostrar detalhes de um deployment
@@ -599,42 +617,21 @@ Fonte: [Medium](https://medium.com/devops-mojo/kubernetes-service-types-overview
 	
 ![image](https://user-images.githubusercontent.com/66180145/151550260-9f6b2264-6701-4b05-a4bd-12a8f6a15d1b.png)
 
+## Exemplo Cluster IP
 
-* Exemplo de Service NodePort:
+Exemplo: [Conectado aplicativos com serviços](https://kubernetes.io/docs/concepts/services-networking/connect-applications-service/)
 
-```
-apiVersion: v1
-kind: Service
-metadata:
-  name: nginx-svc
-spec:
-  type: ?
-  selector:
-    app: ?
-  ports:
-    - protocol: TCP
-      port: ?
-      targetPort: ?
-```
+## Exemplo NodePort
+
+Exemplo: [Usando Service para acessar um aplicativo em um cluster](https://kubernetes.io/docs/tasks/access-application-cluster/service-access-application-cluster/)
+
+Exercício
+
+1. Como exportar o service para um arquivo .yaml?
+
+## Exemplo Load
+
 	
-	
-* Exemplo de Service LoadBalancer:
-
-```
-apiVersion: v1
-kind: Service
-metadata:
-  name: mariadb-service
-spec:
-  type: LoadBalancer
-  selector:
-    app: mariadb-wp
-  ports:
-    - protocol: TCP
-      port: 3306
-      targetPort: 3306	
-```
-
 ### EndPoints
 
 Todo o Service deve possuir endepoints saudáveis para que possa encaminhar o tráfego, sendo esse objetivo denominado EndPoint.
