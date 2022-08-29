@@ -629,9 +629,13 @@ Exercício
 
 1. Como exportar o service para um arquivo .yaml?
 
-## Exemplo Load
+## Exemplo Load balancer
 
+Para realizar o exemplo abaixo é necessário que seu cluster esteja em um cloud provider.
+
+Exemplo: [Load Balancer](https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/)
 	
+  
 ### EndPoints
 
 Todo o Service deve possuir endepoints saudáveis para que possa encaminhar o tráfego, sendo esse objetivo denominado EndPoint.
