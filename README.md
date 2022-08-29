@@ -625,6 +625,11 @@ Exemplo: [Conectado aplicativos com serviços](https://kubernetes.io/docs/concep
 
 Exemplo: [Usando Service para acessar um aplicativo em um cluster](https://kubernetes.io/docs/tasks/access-application-cluster/service-access-application-cluster/)
 
+Se estiver usando Kind
+```
+kubectl port-forward svc/frontend --address 0.0.0.0 8080:80
+```
+
 Exercício
 
 1. Como exportar o service para um arquivo .yaml?
