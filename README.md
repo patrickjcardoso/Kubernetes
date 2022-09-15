@@ -245,6 +245,11 @@ kubectl apply -f <nomedoarquivo.yaml>
 # expondo uma pod
 kubectl port-forward pod/meupod 8080:80
 ```
+Se estiver usando Kind
+```
+kubectl port-forward svc/frontend --address 0.0.0.0 8080:80
+```
+
 Cada Pod deve executar uma única instância de um determinado aplicativo. Se você quiser dimensionar seu aplicativo horizontalmente (para fornecer mais recursos gerais executando mais instâncias), use vários pods, um para cada instância. No Kubernetes, isso geralmente é chamado de replicação . Os pods replicados geralmente são criados e gerenciados como um grupo por um recurso de carga de trabalho e seucontrolador.
 
 [Exemplo pod com 2 containers](https://kubernetes.io/docs/tasks/access-application-cluster/communicate-containers-same-pod-shared-volume/)
@@ -625,11 +630,6 @@ Exemplo: [Conectado aplicativos com serviços](https://kubernetes.io/docs/concep
 
 Exemplo: [Usando Service para acessar um aplicativo em um cluster](https://kubernetes.io/docs/tasks/access-application-cluster/service-access-application-cluster/)
 
-Se estiver usando Kind
-```
-kubectl port-forward svc/frontend --address 0.0.0.0 8080:80
-```
-
 Exercício
 
 1. Como exportar o service para um arquivo .yaml?
@@ -637,6 +637,15 @@ Exercício
 ## Exemplo Load balancer
 
 Para realizar o exemplo abaixo é necessário que seu cluster esteja em um cloud provider.
+### Cloud Environment
+<img src=https://kubernetes.github.io/ingress-nginx/images/baremetal/cloud_overview.jpg alt="drawing" width="400"/>
+
+### Bare-metal Environment
+<img src=https://kubernetes.github.io/ingress-nginx/images/baremetal/baremetal_overview.jpg alt="drawing" width="400"/>
+
+## Exemplo LoadBalancer com Kind
+
+[Documentação Kind Loadbalancer](https://kind.sigs.k8s.io/docs/user/loadbalancer/)
 
 Exemplo: [Load Balancer](https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/)
 	
@@ -871,6 +880,8 @@ spec:
 ## Ingress Controller 
 [Referências](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/
 )
+
+[Nginx Ingress](https://kubernetes.github.io/ingress-nginx/deploy/baremetal/)
 
 Ao contrário de outros tipos de controladores que são executados como parte do kube-controller-managerbinário, os controladores do Ingress não são iniciados automaticamente com um cluster.
 
